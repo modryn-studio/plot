@@ -1,5 +1,5 @@
-// Server-only DB client. `event` is append-only — the app never UPDATE/DELETEs it
-// (a DB trigger enforces this); erasure runs through a separate privileged path.
+// Server-only DB client. Re-exports the schema, so `@/lib/db` is the one import for both
+// the connection and the tables.
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
 import { env } from '@/lib/env';
