@@ -10,14 +10,24 @@
    `src/app/globals.css`, choose a real display face and point `--font-heading` at it, then build
    the `ui/` primitives with all five states — against `modryn-hq/playbooks/design-system.md`.
    Improvising structure per-component is why UI comes out as slop; front-load it here.
-5. `npm install`, then `npx drizzle-kit generate` + `migrate` (see the migration rule below).
-6. `npm run dev`.
-7. Rewrite this file for the project.
+5. **Pick this project's agents.** `.claude/agents/` ships the universal craft crew — they improve
+   any product, so they stay. What is missing is anything that knows *this* domain. Copy the
+   vertical or capability bench the product needs from `modryn-hq/benches/<name>/` into
+   `.claude/agents/`: `trading/` for a trading product, `exterior/` for property and landscape,
+   `interface/` (`zara`) where generative UI is a **core pattern** rather than merely an available
+   dependency. Copy only what the product is actually about — an agent with no domain to work on
+   is a seat nobody sits in, and it makes the roster harder to read for the ones that matter.
+   **Do this before the first slice**, not after: a bench agent that arrives late has to reverse
+   engineer decisions it should have been in the room for.
+6. `npm install`, then `npx drizzle-kit generate` + `migrate` (see the migration rule below).
+7. `npm run dev`.
+8. Rewrite this file for the project.
 
 **Strip what you don't need.** Nothing here is load-bearing on anything else, so delete freely:
 `src/app/admin/` + `require-admin.ts` (no admin surface) · `analytics.ts` + `track.ts` +
 `/api/track` + `analytics_event` (no funnel) · `waitlistSignup` (no waitlist) · `lib/ai.ts` + the
-AI SDK deps (not an AI product). Deleting is cheaper than carrying a half-wired subsystem.
+AI SDK deps (not an AI product) · any `.claude/agents/` character whose lane this product does not
+have. Deleting is cheaper than carrying a half-wired subsystem.
 
 **What is deliberately NOT here**, because it is a per-product decision rather than a default:
 anonymous sessions (see the note at the top of `src/lib/auth.ts`), an app shell, a component
