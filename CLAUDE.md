@@ -10,15 +10,13 @@
    `src/app/globals.css`, choose a real display face and point `--font-heading` at it, then build
    the `ui/` primitives with all five states — against `modryn-hq@v3:playbooks/design-system.md`.
    Improvising structure per-component is why UI comes out as slop; front-load it here.
-5. **Pick this project's agents.** `.claude/agents/` ships the universal craft crew — they improve
-   any product, so they stay. What is missing is anything that knows *this* domain. Copy the
-   vertical or capability bench the product needs from `modryn-hq/.claude/agents/<bench>/` into
-   `.claude/agents/`: `trading/` for a trading product, `exterior/` for property and landscape,
-   `interface/` (`zara`) where generative UI is a **core pattern** rather than merely an available
-   dependency. Copy only what the product is actually about — an agent with no domain to work on
-   is a seat nobody sits in, and it makes the roster harder to read for the ones that matter.
-   **Do this before the first slice**, not after: a bench agent that arrives late has to reverse
-   engineer decisions it should have been in the room for.
+5. **Pick this project's agents.** `.claude/agents/` is empty on purpose — the characters live in
+   `modryn-hq@v4:.claude/agents/`, and a seeded copy here would go stale invisibly in every project
+   made afterwards. Copy `craft/` always, then whichever domain the product is actually about
+   (`trading` · `music` · `exterior` · `labs` · `interface` · `media`). Copy nothing else: an agent
+   with no domain to work on is a seat nobody sits in. **Do this before the first slice**, not
+   after — one that arrives late has to reverse engineer decisions it should have been present for.
+   See `.claude/agents/README.md` for the commands.
 6. `npm install`, then `npx drizzle-kit generate` + `migrate` (see the migration rule below).
 7. `npm run dev`.
 8. Rewrite this file for the project.
