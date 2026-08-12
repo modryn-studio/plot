@@ -126,7 +126,4 @@ scripts/            email-preview (renders the mail templates), load-env, funnel
   tracked but never queried is noise; a funnel query with no event behind it is a lie.
 - **`src/app/layout.tsx` sets `robots: { index: false }`.** Remove it when the project genuinely
   goes public — not before.
-- **UI bar:** build *to* `modryn-hq@v3:playbooks/design-system.md`. Never ship a framework-default font
-  as the brand face, violet gradient CTAs, gradient text, glow blobs, glassmorphism, pill-everything,
-  or emoji as UI. If it looks like default LLM output, it's rejected.
 - **Generative UI** (AI SDK v7 `streamText` + tools + `message.parts`): `modryn-hq@v3:playbooks/generative-ui.md`.
