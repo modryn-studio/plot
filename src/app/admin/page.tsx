@@ -130,7 +130,7 @@ export default async function AdminPage() {
         />
         <p className="text-caption text-muted mt-4">
           Steps read zero until their screens exist and are instrumented. Add product steps here as
-          you add events — see src/lib/analytics.ts.
+          you add events. See src/lib/analytics.ts.
         </p>
       </section>
 
