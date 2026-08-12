@@ -12,7 +12,7 @@
    Improvising structure per-component is why UI comes out as slop; front-load it here.
 5. **Pick this project's agents.** `.claude/agents/` ships the universal craft crew — they improve
    any product, so they stay. What is missing is anything that knows *this* domain. Copy the
-   vertical or capability bench the product needs from `modryn-hq/benches/<name>/` into
+   vertical or capability bench the product needs from `modryn-hq/.claude/agents/<bench>/` into
    `.claude/agents/`: `trading/` for a trading product, `exterior/` for property and landscape,
    `interface/` (`zara`) where generative UI is a **core pattern** rather than merely an available
    dependency. Copy only what the product is actually about — an agent with no domain to work on
