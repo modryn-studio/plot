@@ -31,14 +31,15 @@ dependency.
 
 ## How to work with them
 
-- **One voice:** `@jobs tighten the hero`, `@rams fix the spacing on the pricing panel`.
-- **A team at once:** `/crew <team> <target>` — **the `crew` skill is not in this boilerplate.**
-  Copy it from the archived `modryn-boilerplate-pro` if you want the team runner; without it the
-  sequencing map below is something you drive by hand, one `@name` at a time.
-- **After an implementation lands:** `/postcheck` — a global skill, not per-repo. It fans the
-  review out to its own fresh-context agents; these characters are for building, not for that pass.
-- **The collision rule** decides relay vs parallel: characters that edit the **same** surfaces run in
-  order (a relay); characters that own **disjoint** surfaces run at once (parallel).
+- **One at a time, by name:** `@jobs tighten the hero`, `@rams fix the spacing on the pricing panel`.
+  There is no team runner — you drive the sequence below yourself, which is a feature at this size:
+  you see each character's diff before the next one builds on it.
+- **The collision rule** decides whether two can run together: characters that edit the **same**
+  surfaces go in order, each seeing the last one's edits; characters that own **disjoint** surfaces
+  can run at once.
+- **After an implementation lands:** `/postcheck` — a global skill, not per-repo. It fans the review
+  out to its own fresh-context agents. These characters build; that pass judges. Do not use one for
+  the other, and never let a character review its own work.
 - **Retire a treatment** with `/prune-worktree <branch>` — deletes the worktree, the local branch, and
   the GitHub branch together.
 
@@ -120,16 +121,16 @@ goes to Luke rather than being resolved between themselves.
 
 ## Sequencing Map
 
-- **Polishing a surface (`/crew craft`) — relay:** `jobs` (identity) → `ogilvy` (copy) → `rams`
-  (visual). Shared components, so they go in order, each seeing the last one's edits.
-- **Before a big change (`/crew strategy`) — parallel:** `charlie` (judges, edits nothing) + `kay`
+- **Polishing a surface — a relay:** `jobs` (identity) → `ogilvy` (copy) → `rams` (visual). They
+  share components, so they go in order. Running them at once means the last write wins.
+- **Before a big change — can run together:** `charlie` (judges, edits nothing) + `kay`
   (structure/scope). No overlap.
-- **Before shipping a surface (`/crew build`) — parallel:** `michelle` (production readiness) +
-  `zara` (streaming architecture, only where the interface bench was copied in). Not part of `full`.
-- **A vertical or capability bench** (copied in per product) runs as its own team — see that bench's
-  README.
-- **Genuinely divergent directions:** don't use `/crew` — cut isolated worktrees per the
-  `parallel-worktree-treatments` playbook in `modryn-hq`.
+- **Before shipping a surface — can run together:** `michelle` (production readiness) + `zara`
+  (streaming architecture, only where the interface bench was copied in).
+- **A vertical or capability bench** (copied in per product) runs as its own group — see that
+  bench's README.
+- **Genuinely divergent directions:** don't sequence at all — cut isolated worktrees, one per
+  treatment, and compare them.
 
 ---
 
@@ -139,6 +140,8 @@ A good pass ends with a surface tighter than it was, a clean per-character repor
 where, and a diff Luke can review from the studio in a couple of minutes. A bad pass ends with
 characters out of their lanes or edits that clobber each other.
 
-Full doctrine: `modryn-hq/playbooks/build-process.md` — **on the `v3` branch.** Several playbooks
-these characters cite (`build-process`, `design-system`, `ui-ux-standards`, `year-five-doctrine`)
-have not been carried onto `v4` yet.
+**Where the doctrine lives, because it is not where you would look.** Every playbook these
+characters cite — `build-process`, `design-system`, `ui-ux-standards`, `year-five-doctrine` — is on
+`modryn-hq`'s **`v3` branch**, and stays there by decision rather than by neglect. `v4` is a
+different, narrower thing. Read them with `git show v3:playbooks/<name>.md`, and do not go looking
+for them on `v4` or conclude they were lost.
