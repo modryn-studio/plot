@@ -81,26 +81,39 @@ const emailOtpPlugin =
       })
     : null;
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL ?? 'http://localhost:3000',
-  /* IN DEVELOPMENT, TRUST ANY LOCALHOST PORT. Empty in production, which changes nothing there:
-   * getTrustedOrigins() always pushes baseURL's own origin first and only then appends this, so
-   * this list is purely additive.
+  /* IN DEVELOPMENT, baseURL IS RESOLVED PER REQUEST FROM THE Host HEADER, not pinned to one
+   * port. This replaces an earlier fix (groundwork 2026-08-10) that kept baseURL pinned to
+   * :3000 and only widened `trustedOrigins` to any localhost port — which fixed the origin
+   * check but NOT the base URL Better Auth actually builds redirects and OAuth callbacks
+   * from, so a browser on :3001 would still get sent through a :3000 callback. `allowedHosts`
+   * is Better Auth's own multi-host feature: it derives the real origin from each request's
+   * `Host` header, checked against this allowlist, so sign-in works on whichever port Next
+   * bound to — 3000, 3001, a worktree's 3002, whatever — with no coordination required and no
+   * env var to keep in sync.
    *
-   * The bug it fixes: `BETTER_AUTH_URL` is pinned to :3000, but Next picks :3001, :3002, ... the
-   * moment 3000 is taken, which is any session running a second dev server (a worktree, a second
-   * clone). Better Auth then rejects every POST from the browser with `Invalid origin` and a 403,
-   * BEFORE the throttle hook and before any mail is attempted — while the login screen reports a
-   * generic send failure, which is untrue in the way that costs the most time: retrying can never
-   * work. Found and fixed in groundwork 2026-08-10; ported here so every repo cloned from this
-   * boilerplate inherits the fix instead of re-discovering it.
+   * `protocol: 'http'` IS A NARROWING, NOT A REQUIREMENT — checked against the installed
+   * library rather than assumed, after a first draft of this comment claimed the opposite.
+   * `getTrustedOrigins` adds an `http://` entry for any host `isLoopbackHost` recognises, and
+   * it recognises `localhost:*` and `127.0.0.1:*` wildcards, so dev would work without this.
+   * What it changes is that the allowlist becomes exactly `http://localhost:*` and
+   * `http://127.0.0.1:*` instead of also carrying `https://` twins nothing local will ever
+   * use. Keep it for the narrower surface and the stated intent, not because omitting it
+   * breaks anything.
    *
-   * AND IT IS INVISIBLE TO A COOKIELESS CURL PROBE. Better Auth's origin check only runs when the
-   * request carries a Cookie header, so a bare curl sails through to the route's own validator and
-   * reports a completely different error. Only a real browser — carrying at least one first-party
-   * cookie — ever sees the 403. Reproduce auth bugs in a browser or not at all. */
-  trustedOrigins: process.env.NODE_ENV === 'production' ? [] : ['http://localhost:*'],
+   * WHATEVER GOES WRONG HERE IS INVISIBLE TO A COOKIELESS CURL PROBE: the origin check only
+   * runs when the request carries a Cookie header. Reproduce auth bugs in a browser or not at
+   * all.
+   *
+   * PRODUCTION STAYS PINNED, on purpose — a wildcard host allowlist in production is an open
+   * redirect waiting to happen. `env.BETTER_AUTH_URL` there is a plain string, and Better
+   * Auth's static-string path (not this dynamic one) resolves it once at boot. */
+  baseURL: isProd
+    ? env.BETTER_AUTH_URL
+    : { allowedHosts: ['localhost:*', '127.0.0.1:*'], protocol: 'http' },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: { user: authUser, session: authSession, account: authAccount, verification: authVerification },

@@ -59,13 +59,18 @@ These are not style preferences. Each one is a bug that shipped or a session tha
   imports it, so a plain string arrives as an opaque object and `clsx` drops it — silently, no error,
   no type complaint. Shared constants live in a plain module with no `'use client'` at its top, and
   re-exporting them from the client file does NOT launder them.
-- **Better Auth rejects any origin that is not `BETTER_AUTH_URL`.** That URL is pinned to :3000, but
-  Next picks :3001, :3002, ... the moment 3000 is taken — any second dev server, any worktree. Every
-  browser POST then 403s with `Invalid origin` before the throttle hook and before any mail, while
-  the login screen reports a generic send failure, so retrying can never work. `trustedOrigins`
-  carries `http://localhost:*` in development for exactly this. **And it is invisible to curl:** the
-  origin check only runs on requests carrying a Cookie header, so a bare probe sails through to a
-  different error. Reproduce auth bugs in a browser or not at all.
+- **In dev, `baseURL` resolves per request from the `Host` header — it is not pinned to one port.**
+  A pinned `BETTER_AUTH_URL` breaks the moment a second dev server or worktree takes the next port,
+  and it breaks in a way that costs the most time: every browser POST 403s with `Invalid origin`
+  before the throttle hook and before any mail, the login screen reports a generic send failure, and
+  retrying can never work. `src/lib/auth.ts` uses Better Auth's
+  `baseURL: { allowedHosts: [...], protocol: 'http' }` in dev — its own multi-host feature, not a
+  workaround — so sign-in works on whatever port Next actually bound to. An earlier fix only widened
+  `trustedOrigins`, which passed the origin check but still built OAuth callbacks from :3000.
+  Production keeps a pinned string; a wildcard host allowlist in production is an open redirect.
+  **Still invisible to curl either way:** the origin check only runs on requests carrying a Cookie
+  header, so a bare probe sails through to a different error. Reproduce auth bugs in a browser or
+  not at all.
 - **Next.js 16 is not the Next.js in your training data.** Read the version-matched docs in
   `node_modules/next/dist/docs/` before writing framework code. `next dev` maintains that pointer in
   `AGENTS.md` — that file exists solely so Next writes its managed block there instead of into this one.
