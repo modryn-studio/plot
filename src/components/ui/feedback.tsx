@@ -30,7 +30,7 @@ export function EmptyState({
     <div className="border-border bg-surface rounded-md border border-dashed p-8 text-center">
       <Icon name={icon} size={24} className="text-muted mx-auto" />
       <p className="text-h3 text-text mt-3">{title}</p>
-      <p className="text-small text-muted mx-auto mt-2 max-w-md">{children}</p>
+      <p className="text-small text-text mx-auto mt-2 max-w-md">{children}</p>
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
@@ -56,7 +56,7 @@ export function ErrorState({
         <Icon name="danger" size={20} className="text-danger mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-body text-text font-medium">{title}</p>
-          <p className="text-small text-muted mt-1">{children}</p>
+          <p className="text-small text-text mt-1">{children}</p>
           {action ? <div className="mt-4">{action}</div> : null}
         </div>
       </div>
@@ -87,7 +87,7 @@ export function NarratedProgress({ steps }: { steps: ProgressStep[] }) {
             className={cn(
               'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
               s.state === 'done' && 'border-success text-success',
-              s.state === 'active' && 'border-accent text-accent',
+              s.state === 'active' && 'border-text text-text',
               s.state === 'waiting' && 'border-border text-muted',
               s.state === 'failed' && 'border-danger text-danger'
             )}
@@ -95,7 +95,7 @@ export function NarratedProgress({ steps }: { steps: ProgressStep[] }) {
             {s.state === 'done' ? <Icon name="check" size={12} /> : null}
             {s.state === 'failed' ? <Icon name="close" size={12} /> : null}
             {s.state === 'active' ? (
-              <span className="bg-accent h-1.5 w-1.5 animate-pulse rounded-full" />
+              <span className="bg-text h-1.5 w-1.5 animate-pulse rounded-full" />
             ) : null}
           </span>
           <span

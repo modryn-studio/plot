@@ -1,9 +1,11 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* plot design tokens — the whole system, not just colors. See docs/design-system.md for the
-   standard these were chosen against: Recraft's shell for canvas mode, and Peterson / Sibley /
-   Merlin for document mode.
+/* plot design tokens — ONE shape language, two densities. See docs/design-system.md.
+   Rewritten 2026-08-17 after Rams' review, which found that declaring "canvas mode" and "document
+   mode" as two SYSTEMS licensed four separate drifts (radius, shadow, ink, and an unexamined
+   accent). Recraft governs how a canvas is arranged and the field guides govern how a page of
+   facts is arranged; NEITHER rules on shape, depth, ink or motion. Those are set once, here.
 
    Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-bg, text-muted, text-h1,
    rounded-md are generated. Never add a tailwind.config file. Color roles are plain (non-inline)
@@ -11,38 +13,61 @@
    swap them at runtime.
 
    eslint's tailwindcss/no-custom-classname reads THIS FILE for the legal class list, so adding a
-   token here is the only way to make a class legal. That is deliberate. */
+   token here is the only way to make a class legal. Note the known gap: it enforces that a class
+   EXISTS, not that it is ours — `text-sm` and `px-5` are legal Tailwind and slipped through. */
 @theme {
   /* Color roles — light defaults; .dark overrides below.
 
      WARM PAPER, NOT COOL GREY. Every SaaS default ground is blue-grey; a field guide is printed
-     on paper. This single change does more for the product's character than the accent does.
-     Color is reserved for MEANING — the photograph and the plan are the colored things on
-     screen, the interface is paper and ink. */
+     on paper. Color is reserved for MEANING — the photograph and the plan are the colored things
+     on screen, the interface is paper and ink. */
   --color-bg: #faf8f5;                /* page ground */
-  --color-surface: #f2efe9;           /* panels, list rows */
+  --color-surface: #f2efe9;           /* panels, list rows — RECESSED, see the naming note below */
   --color-elevated: #ffffff;          /* cards, popovers, the floating prompt bar */
   --color-border: #e0dbd2;            /* dividers */
-  --color-text: #1c1a17;              /* body */
-  --color-muted: #6b6660;             /* secondary — the reason under a quantity */
+  --color-border-strong: #c2bbae;     /* the hover firm-up. 1.66 on surface against border's 1.38 */
+  --color-text: #1c1a17;              /* body, AND the primary action */
+  --color-ink-hover: #2a2721;         /* the primary action's only hover move */
+  --color-muted: #6b6660;             /* metadata: dates, counts, units, labels, sources */
+  --color-pressed: #e8e3da;           /* the ground a control presses to — see the note below */
 
-  /* A spruce green, deliberately dark and desaturated. The bright "eco" green is the single most
-     predictable choice a landscaping product could make and it reads as marketing; this one reads
-     as surveyed. Also the confirmed-value color — action and certainty are the same idea here. */
-  --color-accent: #2f6f5e;
-  --color-accent-foreground: #ffffff;
+  /* THERE IS NO ACCENT HUE, AND THAT IS THE DECISION (Luke + Rams, 2026-08-17).
+   *
+   * It used to be a spruce green, justified as "reads surveyed rather than eco". That was a claim
+   * about connotation, not a decision about a job, and this system's own standard kills it:
+   * COLOR BELONGS TO THE SUBJECT, NOT THE CHROME. Green is this subject's color — grass, shrubs,
+   * the plant palette, the aerial — so a green button over a plan whose plant symbols are green is
+   * the chrome painted in the plate's ink. `run-rebuild` reached the same verdict from the other
+   * side: "a green mark beside a green P&L is a lie no amount of contrast rescues."
+   *
+   * It also collided internally: `accent` measured 5.15 and `success` 4.34 on the worst ground —
+   * two greens a hair apart in value, carrying different meanings, meeting on the Build screen.
+   *
+   * So the primary action is INK. Peterson has no accent color; the arrow is black, and what makes
+   * it read is that it is the ONLY arrow. A filled near-black button is a stronger scan cue than a
+   * mid-value hue, and at 16.38:1 it is the most legible object on a phone in direct sun — which
+   * is where this product is used.
+   *
+   * The consequence worth protecting: success / warning / danger are now the ONLY chromatic things
+   * in the interface. That is "color reserved for meaning" actually arriving.
+   *
+   * NOT BLUE, if a hue is ever revisited: the APWA locate code makes blue mean potable water, and
+   * this product has a water-marking feature and an 811 gate. Same collision, different subject. */
 
-  --color-success: #3f7d3f;           /* a gate that has been passed */
-  --color-warning: #b45309;           /* drainage, crowding, out-of-zone */
+  /* The three meanings. All recomputed 2026-08-17 — success and warning were BELOW AA on
+     `surface` (4.34 and 4.38) while the phase 3 gate claimed contrast had been checked. It had
+     not. These are solved with headroom rather than to the line so hex rounding cannot drop them
+     back under: 4.95 and 4.91 worst-ground. */
+  --color-success: #3a733a;           /* a gate that has been passed */
+  --color-warning: #a94c07;           /* drainage, crowding, out-of-zone */
   --color-danger: #b3261e;            /* destructive, and hard stops like 811 */
 
-  /* PRODUCT ROLES. Derived-vs-confirmed is a core concept here, not decoration: a number the app
-     worked out and a number the user checked with a tape are different things, and one of them is
-     what you buy materials against. NEVER the only signal — a derived value also says so in
-     words, because color alone dies in sunlight and for a colorblind reader, and this signal is
-     attached to money. */
-  --color-derived: #8a7f6a;
-  --color-confirmed: #2f6f5e;
+  /* NO --color-derived / --color-confirmed. Derived-vs-confirmed is still a core product concept,
+     but it resolves into the ink tiers rather than needing its own hues: DERIVED is `muted` plus
+     the word "estimated"; CONFIRMED is full `text` plus the word "measured". Pencil and ink.
+     The old --color-derived was #8a7f6a, which failed AA on every light ground (3.44 worst) — on
+     the ink that tells you a number is a guess, on the screen where it becomes a purchase.
+     The word was always the real signal; the color was duplicating it, and badly. */
 
   /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component.
      text-body-lg is the build guide's body size, and that is functional rather than decorative:
@@ -61,12 +86,52 @@
   --font-heading: var(--font-source-serif), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
 
-  /* Radius — default md; rounded-full only for avatars/toggles, never pill-everything */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* RADIUS IS KEYED TO WHAT A THING IS, not to taste. A radius does one job: it tells you the
+   * boundary of a thing you can OPERATE. A rounded rectangle reads as a discrete manipulable
+   * object; a square edge reads as a region of a page.
+   *
+   * That gives the split Luke's paper instinct was reaching for — and he was right about the
+   * thing, wrong about the noun. What has square edges on paper is THE PAGE AND ITS PRINTED
+   * REGIONS: the plate, the map, the table. What does not is anything never printed on it — your
+   * hand, a tool, a control. A field guide has no buttons, so it cannot rule on button shape.
+   *
+   *   plate       0   the thing that IS the page: the photograph, the plan viewport, the aerial,
+   *                   a takeoff table, a data row's own bounds, print output.  →  rounded-none
+   *   slot       12   card, modal, sheet, selectable choice, the PromptBar as a unit
+   *   control     8   button, input, chip, IconButton, tool-rail button, menu item
+   *   badge       6   RENT / BUY, modelled, estimated, the stale mark
+   *
+   * Values are `run-rebuild`'s exactly, and identical on purpose: a 44px control here and a 36px
+   * control there are both rectangles held in a hand, so a different number would be difference
+   * for its own sake. The PLATE class is where plot genuinely differs — Run has no full-bleed
+   * photograph that IS the page.
+   *
+   * Named xs/sm/md rather than badge/control/slot because Tailwind v4 generates `rounded-*` from
+   * this namespace and a bare `--radius` generates nothing. There is deliberately no `lg`. */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
 
-  /* Motion — no spring, no bounce; durations 120–250ms */
+  /* DEPTH IS THE AFFORDANCE FOR A THING YOU CAN PUSH. Not elevation-as-importance, not
+   * lift-as-polish. Shadow answers exactly one question — "is this a thing I can operate?" — and
+   * on a phone at arm's length in daylight with dirty hands that is the highest-value question on
+   * the screen.
+   *
+   * This replaces "a field guide has no drop shadows", which was wrong: Peterson has no shadows
+   * because ink on paper physically cannot cast one, not because a designer judged they harm
+   * legibility. Inheriting a constraint after the constraint has stopped existing is the same
+   * error as putting electronics in a wooden cabinet.
+   *
+   * PRESS IS AN INSET, NOT A FILL FLASH OR A SCALE, and that is derived rather than borrowed: an
+   * inset's weight sits at the TOP edge — the part not under your thumb — so it survives the
+   * finger covering the control. A fill flash does not. `active:scale-[0.98]` is worse still: a
+   * shrink is not a push, the object gets smaller and stays flat. */
+  --shadow-sm: 0 1px 2px 0 rgba(28, 26, 23, 0.06);      /* a control at rest */
+  --shadow-card: 0 2px 4px 0 rgba(28, 26, 23, 0.10);    /* genuinely floating over the canvas */
+  --shadow-press: inset 0 2px 4px 0 rgba(28, 26, 23, 0.12);
+
+  /* Motion — no spring, no bounce. Press is faster than everything else on purpose: it is
+     acknowledgement, and acknowledgement late reads as a missed tap. */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -78,16 +143,31 @@
   --color-surface: #1b1a17;
   --color-elevated: #232120;
   --color-border: #33302c;
+  --color-border-strong: #57524b;
   --color-text: #eae7e1;
+  --color-ink-hover: #d8d4cd;
   --color-muted: #928d85;
-  --color-accent: #5fae97;
-  --color-accent-foreground: #0d1512;
+  --color-pressed: #12110f;           /* dark presses to the page; see the note above */
   --color-success: #71b871;
   --color-warning: #f0ad4a;
   --color-danger: #f2867d;
-  --color-derived: #a89a80;
-  --color-confirmed: #5fae97;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.28);
+  --shadow-card: 0 2px 4px 0 rgba(0, 0, 0, 0.32);
+  --shadow-press: inset 0 2px 5px 0 rgba(0, 0, 0, 0.45);
 }
+
+/* A NOTE ON --color-pressed, because the value looks arbitrary and is not.
+ *
+ * `run-rebuild` presses to "the page" because its ramp runs bg #f6f5f3 < surface #ffffff — the
+ * card is LIGHTER than the page, so pressing to the page moves away from you. plot's ramp is
+ * inverted: surface #f2efe9 < bg #faf8f5 < elevated #ffffff, so `surface` is a RECESSED panel and
+ * `bg` sits above it. "Press to the page" here would move a control TOWARD you. So light gets a
+ * literal one step below surface; dark agrees with Run's direction and presses to the page.
+ *
+ * (Backlog, not now: plot's ground tokens are misnamed — `surface` is recessed and `elevated` is
+ * raised, with `bg` between them. Coherent values, misleading names. Rename to recessed/page/
+ * raised when the next surface is built, not while a live rack depends on them.) */
 
 /* Spacing: no new tokens — use Tailwind's scale but ONLY the allowed steps
    (4 8 12 16 24 32 40 48 64 80 96 → 1 2 3 4 6 8 10 12 16 20 24). Never arbitrary [13px],
@@ -114,9 +194,12 @@
   }
 
   /* Keyboard-focus baseline for every interactive element. Mouse users unaffected.
-     This is not optional on a product used outdoors in sunlight with gloves on. */
+     NOT OPTIONAL on a product used outdoors in sunlight with gloves on — which is why every
+     component-local `focus-visible:outline-none` + alpha ring was removed: they suppressed this
+     and replaced it with a 30%-alpha ring at zero offset, on the most-tabbed controls in the app.
+     Now ink rather than accent, at 17.36:1 on `elevated`. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-text);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }

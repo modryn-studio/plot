@@ -87,7 +87,7 @@ export function DimensionReadout({
     <span
       className={cn(
         'border-border bg-elevated tabular-nums text-small inline-flex items-center gap-1.5 rounded-sm border px-2 py-1',
-        confirmed ? 'text-confirmed' : 'text-derived',
+        confirmed ? 'text-text' : 'text-muted',
         className
       )}
     >

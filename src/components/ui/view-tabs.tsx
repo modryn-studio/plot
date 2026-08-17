@@ -51,7 +51,7 @@ export function ViewTabs({
               'text-small -mb-px border-b-2 px-4 py-3 transition-colors',
               'disabled:pointer-events-none disabled:opacity-40',
               on
-                ? 'border-accent text-text font-medium'
+                ? 'border-text text-text font-medium'
                 : 'text-muted hover:text-text border-transparent'
             )}
           >

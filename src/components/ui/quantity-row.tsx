@@ -42,19 +42,19 @@ export function QuantityRow({
     <div className="border-border flex items-baseline gap-4 border-b py-3 last:border-b-0">
       <div className="min-w-0 flex-1">
         <p className="text-body text-text">{item}</p>
-        {reason ? <p className="text-small text-muted mt-0.5">{reason}</p> : null}
+        {reason ? <p className="text-small text-text mt-0.5">{reason}</p> : null}
       </div>
       <p
         className={cn(
           'tabular-nums text-body shrink-0 text-right',
-          unconfirmed ? 'text-derived' : 'text-text'
+          unconfirmed ? 'text-muted' : 'text-text'
         )}
       >
         {amount}
         {unconfirmed ? (
           <>
             {' '}
-            <Icon name="verify" size={13} className="text-derived inline align-baseline" />
+            <Icon name="verify" size={13} className="text-muted inline align-baseline" />
             {/* The word, because colour and a mark are both defeated by sunlight and by a
                 colourblind reader, and this line is attached to money. */}
             <span className="sr-only">(not yet confirmed)</span>

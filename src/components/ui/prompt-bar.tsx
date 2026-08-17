@@ -48,7 +48,7 @@ export function PromptBar({
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="border-border bg-elevated rounded-lg border p-3 shadow-lg">
+      <div className="border-border bg-elevated rounded-md border p-3 shadow-lg">
         <div className="flex items-start gap-2">
           <textarea
             rows={1}
@@ -67,7 +67,7 @@ export function PromptBar({
             className={cn(
               'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm transition-colors',
               'disabled:pointer-events-none disabled:opacity-40',
-              'bg-accent text-accent-foreground hover:opacity-90'
+              'bg-text text-bg hover:opacity-90'
             )}
           >
             {busy ? <Spinner /> : <Icon name="send" size={16} />}
@@ -85,7 +85,7 @@ export function PromptBar({
       </div>
 
       {/* NOT OPTIONAL, and not state-dependent. See the note above. */}
-      <p className="text-caption text-muted mt-2 text-center">
+      <p className="text-caption text-text mt-2 text-center">
         Generated images are illustrations, not plans. Sizes come from the Plan view.
       </p>
     </div>

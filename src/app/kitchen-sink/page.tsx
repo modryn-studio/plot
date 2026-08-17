@@ -81,7 +81,7 @@ const GROUPS: { group: string; titles: string[] }[] = [
   { group: 'Marks', titles: ['Icon'] },
   {
     group: 'Tokens and proofs',
-    titles: ['Type ramp', 'Spacing ramp', 'Ground stack', 'Ink roles', 'Contrast'],
+    titles: ['Type ramp', 'Spacing ramp', 'Ground stack', 'Ink roles', 'Contrast', 'Chrome over a photograph'],
   },
 ];
 
@@ -917,7 +917,7 @@ function Sections() {
           {([1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24] as const).map((step) => (
             <div key={step} className="flex items-center gap-4">
               <code className="text-caption text-muted w-12 shrink-0">{step}</code>
-              <div className="bg-accent h-3" style={{ width: step * 4 }} />
+              <div className="bg-text h-3" style={{ width: step * 4 }} />
               <span className="text-caption text-muted tabular-nums">{step * 4}px</span>
             </div>
           ))}
@@ -946,16 +946,13 @@ function Sections() {
 
       <Section
         title="Ink roles"
-        note="Colour is reserved for meaning. The photo and the plan are the coloured things; the interface is paper and ink."
+        note="TWO TIERS, and no more. Metadata attached to an object (a date, a count, a unit, a source) is muted, because nobody reads it as prose. Prose meant to be READ is full-strength ink. Hierarchy below body is carried by size and weight, not by a third grey. With the accent deleted, success/warning/danger are the only chromatic things left."
       >
         <div className="space-y-2">
           {(
             [
-              ['text', 'text-text', 'body'],
-              ['muted', 'text-muted', 'secondary'],
-              ['accent', 'text-accent', 'action'],
-              ['confirmed', 'text-confirmed', 'the user checked it'],
-              ['derived', 'text-derived', 'the app worked it out'],
+              ['text', 'text-text', 'prose, and the primary action'],
+              ['muted', 'text-muted', 'metadata: dates, counts, units, labels, sources'],
               ['success', 'text-success', 'a gate passed'],
               ['warning', 'text-warning', 'drainage, crowding, out of zone'],
               ['danger', 'text-danger', 'destructive, and hard stops'],
@@ -972,27 +969,30 @@ function Sections() {
 
       <Section
         title="Contrast"
-        note="Body ≥ 4.5:1, large ≥ 3:1, both modes. The row that matters most is the last one: chrome over a photograph, where the ground is arbitrary and the token that passes against `bg` can vanish."
+        note="COMPUTED FROM THE LIVE TOKENS, not printed. A displayed table is a claim; this reads getComputedStyle at render and does the WCAG maths, so it cannot say PASS about a value that has since changed. It found three real failures the moment it was written: derived at 3.44, success at 4.34, warning at 4.38, while the phase 3 gate already claimed contrast had been checked."
       >
-        <div className="space-y-3">
-          <div className="bg-surface rounded-md p-4">
-            <p className="text-body text-text">text on surface</p>
-            <p className="text-small text-muted">muted on surface</p>
-          </div>
-          <div className="bg-accent rounded-md p-4">
-            <p className="text-body text-accent-foreground">accent-foreground on accent</p>
-          </div>
-          {/* The hard case. A stand-in for a sunlit driveway: near-white, which is where muted ink
-              and a hairline border both disappear. Chrome over the canvas therefore always carries
-              its own ground rather than sitting as bare ink on the image. */}
-          <div className="rounded-md bg-[#e8e4dc] p-4">
-            <p className="text-caption mb-2 text-[#4a453d]">
-              stand-in for a sunlit photograph: chrome must carry its own ground
-            </p>
-            <div className="flex gap-2">
-              <ScaleBar feet={20} widthPx={80} />
-              <DimensionReadout value={'12′ 0″'} confirmed />
-            </div>
+        <ContrastProof />
+      </Section>
+
+      <Section
+        title="Chrome over a photograph"
+        note="The one ground the system does not choose. Every other surface is a token, so its contrast is a fixed checkable number; this one is whatever the camera saw. It is why chrome over the canvas always carries its own ground rather than sitting as bare ink on the image."
+      >
+        {/* Arbitrary values, deliberately and allowlisted: this stands in for a PHOTOGRAPH, not a
+            design surface. Tokenising it would claim the system owns a colour it does not. */}
+        <div className="rounded-md bg-[#e8e4dc] p-4">
+          <p className="text-caption mb-2 text-[#4a453d]">
+            a sunlit driveway: near-white, where muted ink and a hairline border both disappear
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <ScaleBar feet={20} widthPx={80} />
+            <DimensionReadout value={'12′ 0″'} confirmed />
+            <ToolRail
+              tools={[
+                { name: 'select', label: 'Select' },
+                { name: 'draw', label: 'Draw an area' },
+              ]}
+            />
           </div>
         </div>
       </Section>
@@ -1018,6 +1018,115 @@ function Section({
       {note ? <p className="text-small text-muted mt-2 max-w-2xl">{note}</p> : null}
       <div className="mt-6 space-y-6">{children}</div>
     </section>
+  );
+}
+
+/* THE CONTRAST PROOF, AND IT COMPUTES RATHER THAN PRINTS.
+ *
+ * A hand-written table saying "muted on surface: 4.95 PASS" is a claim about a value, maintained
+ * beside the value, and it drifts the moment either moves. This reads the live custom properties
+ * off the pane it is rendered in and does the WCAG 2.x relative-luminance maths, so it reports
+ * what is actually on screen — in whichever theme that pane is showing.
+ *
+ * It earned itself immediately: `derived` was 3.44 on `surface`, `success` 4.34 and `warning` 4.38,
+ * all below the 4.5 body floor, at a moment when this file's own phase 3 gate was ticked as
+ * "light and dark both defined and contrast-checked". The check had never been run.
+ *
+ * Reads from a probe element inside this pane, NOT from documentElement: in compare mode the two
+ * panes force `.dark` locally, so the root's values would report the same numbers twice.
+ */
+function ContrastProof() {
+  const probeRef = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState<
+    { ink: string; onBg: number; onSurface: number; onElevated: number }[]
+  >([]);
+
+  useEffect(() => {
+    const el = probeRef.current;
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    const read = (name: string) => cs.getPropertyValue(name).trim();
+
+    /* Only hex is used in this system's palette, so a full CSS colour parser would be scope for
+     * nothing. If a token is ever expressed another way this returns null and the row reports
+     * `n/a` rather than a wrong number.
+     *
+     * BOTH LENGTHS, AND THAT IS NOT DEFENSIVE PADDING. `getComputedStyle` hands back what the
+     * browser stored, not what was authored: `#ffffff` comes out of a custom property as `#fff`.
+     * A six-digit-only regex therefore dropped `--color-elevated` and reported every ink as
+     * failing against it. Found by this proof on its first render, which is the argument for
+     * computing rather than printing in one line. */
+    const rgb = (hex: string): [number, number, number] | null => {
+      const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+      if (!m) return null;
+      const h = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1];
+      const n = parseInt(h, 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    };
+    const lum = (c: [number, number, number]) => {
+      const f = (v: number) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+    };
+    const ratio = (a: string, b: string) => {
+      const ca = rgb(a);
+      const cb = rgb(b);
+      if (!ca || !cb) return NaN;
+      const [l1, l2] = [lum(ca), lum(cb)].sort((x, y) => y - x);
+      return (l1 + 0.05) / (l2 + 0.05);
+    };
+
+    const grounds = ['--color-bg', '--color-surface', '--color-elevated'].map(read);
+    const inks = ['text', 'muted', 'success', 'warning', 'danger'];
+    setRows(
+      inks.map((name) => {
+        const ink = read(`--color-${name}`);
+        const [onBg, onSurface, onElevated] = grounds.map((g) => ratio(ink, g));
+        return { ink: name, onBg, onSurface, onElevated };
+      })
+    );
+  }, []);
+
+  const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(2) : 'n/a');
+
+  return (
+    <div ref={probeRef}>
+      <table className="text-small w-full max-w-lg">
+        <thead>
+          <tr className="border-border text-caption text-muted border-b text-left">
+            <th className="py-2 font-medium">ink</th>
+            <th className="py-2 text-right font-medium">bg</th>
+            <th className="py-2 text-right font-medium">surface</th>
+            <th className="py-2 text-right font-medium">elevated</th>
+            <th className="py-2 pl-4 font-medium">AA body</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const worst = Math.min(r.onBg, r.onSurface, r.onElevated);
+            const pass = worst >= 4.5;
+            return (
+              <tr key={r.ink} className="border-border border-b last:border-b-0">
+                <td className="text-text py-2">{r.ink}</td>
+                <td className="text-muted py-2 text-right tabular-nums">{fmt(r.onBg)}</td>
+                <td className="text-muted py-2 text-right tabular-nums">{fmt(r.onSurface)}</td>
+                <td className="text-muted py-2 text-right tabular-nums">{fmt(r.onElevated)}</td>
+                <td className={cn('py-2 pl-4', pass ? 'text-success' : 'text-danger')}>
+                  {pass ? 'pass' : `FAIL ${fmt(worst)}`}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="text-small text-text mt-3 max-w-lg">
+        The primary action is ink on paper, so it does not appear as a row: it is{' '}
+        <span className="tabular-nums">{fmt(rows.find((r) => r.ink === 'text')?.onBg ?? NaN)}</span>{' '}
+        against the page, the same figure as body text, and the most legible object on the screen.
+      </p>
+    </div>
   );
 }
 

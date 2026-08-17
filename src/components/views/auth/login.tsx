@@ -251,7 +251,7 @@ export function Login() {
 
           {/* The card frame stays mounted across states - only its contents swap - so a successful
               send reads as "the card you just used answered you", not as a page reset. */}
-          <div className="border-border bg-surface mt-8 rounded-lg border p-6">
+          <div className="border-border bg-surface mt-8 rounded-md border p-6">
             {/* One error slot, at the TOP: a Google failure originates from the button above, so a
                 message under the email form would attribute it to the wrong control. */}
             {error && <p className="text-small text-danger mb-4 text-center">{error}</p>}

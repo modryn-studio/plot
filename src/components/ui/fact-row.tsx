@@ -24,9 +24,9 @@ import { cn } from '@/lib/cn';
 type Confidence = 'modelled' | 'derived' | 'confirmed';
 
 const CONFIDENCE: Record<Confidence, { ink: string; word: string }> = {
-  modelled: { ink: 'text-derived', word: 'modelled' },
-  derived: { ink: 'text-derived', word: 'derived' },
-  confirmed: { ink: 'text-confirmed', word: 'confirmed' },
+  modelled: { ink: 'text-muted', word: 'modelled' },
+  derived: { ink: 'text-muted', word: 'derived' },
+  confirmed: { ink: 'text-text', word: 'confirmed' },
 };
 
 export function FactRow({
@@ -53,7 +53,7 @@ export function FactRow({
       <div className="min-w-0 flex-1">
         <p className="text-small text-muted">{label}</p>
         <p className="text-body text-text tabular-nums mt-0.5">{value}</p>
-        {hint ? <p className="text-small text-muted mt-1">{hint}</p> : null}
+        {hint ? <p className="text-small text-text mt-1">{hint}</p> : null}
       </div>
 
       <div className="shrink-0 text-right">

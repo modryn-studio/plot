@@ -11,7 +11,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     <textarea
       ref={ref}
       className={cn(
-        'border-border placeholder:text-muted focus:border-accent focus-visible:ring-accent/20 w-full resize-none border bg-transparent px-4 py-3 text-sm transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50',
+        // Same contract as Input — these are one object at two heights, so any state Input has
+        // and this does not is a place the pair can drift unnoticed. See input.tsx for why the
+        // edge is `border-strong` and why the local focus ring was removed.
+        'border-border-strong placeholder:text-muted text-body w-full resize-none rounded-sm border bg-transparent px-4 py-3',
+        'transition-colors duration-100 ease-out focus:border-text',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}

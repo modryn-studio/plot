@@ -24,9 +24,13 @@ import { Icon, type IconName } from './icon';
  */
 type Tone = 'note' | 'check' | 'warn' | 'stop';
 
+/* THE `check` TONE IS INK, AND THAT IS THE POINT OF DELETING THE ACCENT. Peterson's arrow is
+ * black; what makes it read is that it is the ONLY arrow on the plate. With no accent hue in the
+ * system, ink is the loudest non-semantic thing available, and "go verify this before you buy" is
+ * not a warning and not a danger — it is the one instruction that decides the outcome. */
 const TONES: Record<Tone, { icon: IconName; ring: string; ink: string; word: string }> = {
   note: { icon: 'info', ring: 'border-border', ink: 'text-muted', word: 'Note' },
-  check: { icon: 'verify', ring: 'border-accent/40', ink: 'text-accent', word: 'Check this' },
+  check: { icon: 'verify', ring: 'border-border-strong', ink: 'text-text', word: 'Check this' },
   warn: { icon: 'warn', ring: 'border-warning/40', ink: 'text-warning', word: 'Warning' },
   stop: { icon: 'danger', ring: 'border-danger/40', ink: 'text-danger', word: 'Do not skip' },
 };

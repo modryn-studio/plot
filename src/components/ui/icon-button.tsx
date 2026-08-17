@@ -34,11 +34,18 @@ export function IconButton({ name, label, active, className, ...props }: IconBut
       title={label}
       aria-pressed={active}
       className={cn(
-        'inline-flex h-10 w-10 items-center justify-center rounded-sm transition-colors',
+        'inline-flex h-10 w-10 items-center justify-center rounded-sm',
+        // 100ms, and it animates the press properties only. See button.tsx for why press is an
+        // inset rather than a fill flash or a scale.
+        'transition duration-100 ease-out',
+        'active:bg-pressed active:shadow-press',
         'disabled:pointer-events-none disabled:opacity-40',
         active
-          ? 'bg-accent text-accent-foreground'
-          : 'text-muted hover:bg-surface hover:text-text',
+          ? // A filled ink chip. This is the active tool in the rail, and with no accent hue in
+            // the system a fill is a stronger scan cue than a colour would have been.
+            'bg-text text-bg shadow-sm'
+          : // Bare at rest: a glyph in a rail is not a raised object until you reach for it.
+            'text-muted hover:bg-elevated hover:text-text hover:shadow-sm',
         className
       )}
       {...props}

@@ -51,7 +51,7 @@ export function StepCard({
 
           {fromTakeoff ? (
             <p className="text-small text-muted mt-3">
-              <span className="text-confirmed">From your takeoff:</span> {fromTakeoff}
+              <span className="text-text">From your takeoff:</span> {fromTakeoff}
             </p>
           ) : null}
 
@@ -103,7 +103,7 @@ export function GateCheck({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="accent-accent h-5 w-5"
+        className="accent-text h-5 w-5"
       />
       <span className={cn('text-small font-medium', checked ? 'text-success' : 'text-text')}>
         {label}

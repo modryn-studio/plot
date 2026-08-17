@@ -113,7 +113,7 @@ export function CodeInput({
                 invalid
                   ? 'border-danger text-danger'
                   : isActive
-                    ? 'border-accent text-text'
+                    ? 'border-text text-text'
                     : 'border-border text-text'
               )}
             >
