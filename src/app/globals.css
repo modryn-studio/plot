@@ -1,28 +1,52 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Modryn design tokens — the whole system, not just colors. Recolor + choose a real
-   display font per project BEFORE building components (that's the anti-slop lever;
-   see modryn-hq/playbooks/design-system.md, or run /design-check lock).
-   Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-surface,
-   text-muted, text-h1, rounded-md are generated. Never add a tailwind.config file.
-   Color roles are plain (non-inline) @theme values — that's what makes them real,
-   overridable custom properties so .dark below can swap them at runtime. */
-@theme {
-  /* Color roles — light defaults; .dark overrides below */
-  --color-bg: #fafafa;                /* page background */
-  --color-surface: #f4f4f5;           /* panels, cards */
-  --color-elevated: #ffffff;          /* raised cards, popovers, modals */
-  --color-border: #e4e4e7;            /* subtle borders, dividers */
-  --color-text: #18181b;              /* body text */
-  --color-muted: #71717a;             /* secondary text, placeholders */
-  --color-accent: #3b82f6;            /* brand / primary CTA — TODO: replace with intent, never violet */
-  --color-accent-foreground: #ffffff; /* text on an accent background — verify AA */
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-danger: #dc2626;
+/* plot design tokens — the whole system, not just colors. See docs/design-system.md for the
+   standard these were chosen against: Recraft's shell for canvas mode, and Peterson / Sibley /
+   Merlin for document mode.
 
-  /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component. */
+   Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-bg, text-muted, text-h1,
+   rounded-md are generated. Never add a tailwind.config file. Color roles are plain (non-inline)
+   @theme values — that's what makes them real, overridable custom properties so .dark below can
+   swap them at runtime.
+
+   eslint's tailwindcss/no-custom-classname reads THIS FILE for the legal class list, so adding a
+   token here is the only way to make a class legal. That is deliberate. */
+@theme {
+  /* Color roles — light defaults; .dark overrides below.
+
+     WARM PAPER, NOT COOL GREY. Every SaaS default ground is blue-grey; a field guide is printed
+     on paper. This single change does more for the product's character than the accent does.
+     Color is reserved for MEANING — the photograph and the plan are the colored things on
+     screen, the interface is paper and ink. */
+  --color-bg: #faf8f5;                /* page ground */
+  --color-surface: #f2efe9;           /* panels, list rows */
+  --color-elevated: #ffffff;          /* cards, popovers, the floating prompt bar */
+  --color-border: #e0dbd2;            /* dividers */
+  --color-text: #1c1a17;              /* body */
+  --color-muted: #6b6660;             /* secondary — the reason under a quantity */
+
+  /* A spruce green, deliberately dark and desaturated. The bright "eco" green is the single most
+     predictable choice a landscaping product could make and it reads as marketing; this one reads
+     as surveyed. Also the confirmed-value color — action and certainty are the same idea here. */
+  --color-accent: #2f6f5e;
+  --color-accent-foreground: #ffffff;
+
+  --color-success: #3f7d3f;           /* a gate that has been passed */
+  --color-warning: #b45309;           /* drainage, crowding, out-of-zone */
+  --color-danger: #b3261e;            /* destructive, and hard stops like 811 */
+
+  /* PRODUCT ROLES. Derived-vs-confirmed is a core concept here, not decoration: a number the app
+     worked out and a number the user checked with a tape are different things, and one of them is
+     what you buy materials against. NEVER the only signal — a derived value also says so in
+     words, because color alone dies in sunlight and for a colorblind reader, and this signal is
+     attached to money. */
+  --color-derived: #8a7f6a;
+  --color-confirmed: #2f6f5e;
+
+  /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component.
+     text-body-lg is the build guide's body size, and that is functional rather than decorative:
+     someone is reading it at arm's length, outdoors, with dirty hands. */
   --text-display: 3rem;     --text-display--line-height: 3.25rem; --text-display--font-weight: 700; --text-display--letter-spacing: -0.02em;
   --text-h1: 2.25rem;       --text-h1--line-height: 2.5rem;       --text-h1--font-weight: 700; --text-h1--letter-spacing: -0.02em;
   --text-h2: 1.75rem;       --text-h2--line-height: 2rem;         --text-h2--font-weight: 600; --text-h2--letter-spacing: -0.01em;
@@ -32,6 +56,11 @@
   --text-small: 0.875rem;   --text-small--line-height: 1.25rem;   --text-small--font-weight: 400;
   --text-caption: 0.75rem;  --text-caption--line-height: 1rem;    --text-caption--font-weight: 500; --text-caption--letter-spacing: 0.01em;
 
+  /* Two faces, and the serif is the point: a field guide is a serif document and every AI SaaS is
+     not. Wired in src/app/layout.tsx via next/font. */
+  --font-heading: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
   /* Radius — default md; rounded-full only for avatars/toggles, never pill-everything */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -39,24 +68,25 @@
 
   /* Motion — no spring, no bounce; durations 120–250ms */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
-
-  --font-heading: system-ui;          /* TODO: choose a real display face — shipping system-ui is a reject */
 }
 
 /* Dark mode overrides — same custom property names, different values. Toggled via
-   ThemeProvider (src/components/theme-provider.tsx) adding/removing .dark on <html>. */
+   ThemeProvider (src/components/theme-provider.tsx) adding/removing .dark on <html>.
+   Warm ink rather than neutral black, so the paper character survives the theme flip. */
 .dark {
-  --color-bg: #0a0a0a;
-  --color-surface: #161616;
-  --color-elevated: #1e1e1e;
-  --color-border: #2a2a2a;
-  --color-text: #ededed;
-  --color-muted: #8a8a8a;
-  --color-accent: #3b82f6;
-  --color-accent-foreground: #ffffff;
-  --color-success: #4ade80;
-  --color-warning: #fbbf24;
-  --color-danger: #f87171;
+  --color-bg: #12110f;
+  --color-surface: #1b1a17;
+  --color-elevated: #232120;
+  --color-border: #33302c;
+  --color-text: #eae7e1;
+  --color-muted: #928d85;
+  --color-accent: #5fae97;
+  --color-accent-foreground: #0d1512;
+  --color-success: #71b871;
+  --color-warning: #f0ad4a;
+  --color-danger: #f2867d;
+  --color-derived: #a89a80;
+  --color-confirmed: #5fae97;
 }
 
 /* Spacing: no new tokens — use Tailwind's scale but ONLY the allowed steps
@@ -66,7 +96,18 @@
 @layer base {
   html {
     @apply bg-bg text-text;
+    font-family: var(--font-sans);
   }
+
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Quantities sit in columns and must align. A takeoff whose numbers do not line up is a takeoff
+   that looks guessed. Applied to any element rendering a measurement or a count. */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes blink {

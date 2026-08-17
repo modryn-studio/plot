@@ -1,14 +1,29 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Source_Serif_4 } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/config/site';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import './globals.css';
 
-// NO FONT IS DECLARED HERE ON PURPOSE. `--font-heading` in globals.css is system-ui with a TODO
-// on it: choose a real display face per project (next/font/google, then point the token at its
-// variable). Shipping a framework default as the brand face is what unstyled output looks like,
-// and picking one here would mean every project inherits a decision nobody made for it.
+/* TWO FACES, AND THE SERIF IS THE POINT. A field guide is a serif document and every AI SaaS is
+ * not, which makes this the cheapest differentiator available and one that serves the standard
+ * rather than decorating it. See docs/design-system.md §0 — document mode is Peterson / Sibley /
+ * Merlin, canvas mode is Recraft's shell.
+ *
+ * Both are loaded as CSS variables and consumed by --font-heading / --font-sans in globals.css,
+ * so no component ever names a font. */
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-source-serif',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   // Shrinks layout viewport when an on-screen keyboard opens — h-dvh containers
@@ -31,8 +46,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: ThemeProvider's blocking script sets the .dark class
     // before hydration, which intentionally differs from the server-rendered markup.
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-heading antialiased">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${sourceSerif.variable} ${inter.variable}`}
+    >
+      <body className="antialiased">
         <ThemeProvider>
           {/* One toggle for the whole app. Move it into a real header when the project grows one. */}
           <ThemeToggle className="fixed top-4 right-4 z-50" />
