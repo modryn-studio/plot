@@ -7,9 +7,17 @@
  * unrelated drawings rather than a family, and no review catches it because each icon is fine on
  * its own.
  *
- * STROKE IS 1.5, NOT LUCIDE'S DEFAULT 2. At a 14px body face with a hairline border, 2 reads
- * chunky and fights the type. Everything here renders through one wrapper so that number is
- * changed in one place, forever.
+ * STROKE IS 1.5, NOT LUCIDE'S DEFAULT 2 — AND THAT IS A DECISION FOR PLOT'S OWN TOKENS, NOT A
+ * PORT. An earlier draft of this file justified 1.5 by citing "a 14px body face", which is
+ * `run-trading`'s `--text-body`, ported along with the number without checking it. Plot's own
+ * `--text-body` is 16px; `--text-small`, which sits directly beside a CallOut or StepCard icon,
+ * is 14px. Checked against those: at 2, Lucide's default fights both faces the same way it did in
+ * the product this was drawn from, reading heavier than the Inter weight it sits next to. 1.5
+ * holds at plot's actual sizes too, so the value survives the check even though the reasoning
+ * that first produced it didn't apply here. Revisit if the icon set ever needs to read heavier
+ * against `text-body-lg` (the build guide's 18px reading size) — not yet exercised.
+ *
+ * Everything renders through one wrapper so this number is changed in one place, forever.
  *
  * SIZE SCALES THE BOX, NOT THE STROKE, and that is intended: a 24-unit mark drawn at 16px paints
  * a 1.0px stroke. What matters is that two icons at the SAME size agree, which they do because
@@ -41,6 +49,7 @@ import {
   MapPin,
   Menu,
   Moon,
+  PanelLeftClose,
   MousePointer2,
   Paperclip,
   Pencil,
@@ -64,6 +73,7 @@ const MARKS = {
   // shell and navigation
   back: ArrowLeft,
   menu: Menu,
+  collapse: PanelLeftClose,
   close: X,
   check: Check,
   chevron: ChevronDown,

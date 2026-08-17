@@ -1,6 +1,6 @@
 'use client';
 
-/* THE RACK. Every primitive, every state, both modes, one route.
+/* THE RACK. Every primitive, every state, one route.
  *
  * IT IS THE ENFORCEMENT MECHANISM for the system's central rule — if a screen needs a value that
  * isn't in the system, add it to the system first — because a rack of everything makes a new
@@ -9,27 +9,26 @@
  * IT IS WHERE YOU SEE THE SYSTEM, NOT WHERE YOU DESIGN IT. When something looks wrong here the fix
  * is a token in globals.css, never a patch on this page. This file is a mirror.
  *
- * WHY IT MUST EXIST BEFORE YOU CAN JUDGE: a design system cannot be evaluated one component at a
- * time. A button alone always looks fine; four side by side is what reveals that two of them
- * disagree about a radius, or that `muted` vanishes on `surface`.
+ * DEFAULT VIEW IS ONE PANE, driven by the SAME theme toggle every other route uses — the one the
+ * root layout pins at `fixed top-4 right-4` — not a light/dark/both chip row local to this page.
+ * The first draft of this rack simulated width with a 375/768/1280/1920 control and swapped every
+ * string for a long-text fixture behind a Density toggle. Both are gone (Luke, 2026-08-17): the
+ * browser's own devtools already resize a window, and a control whose job needs explaining has
+ * failed at being a control. Long-text coverage did not go with it — see the note at LONG_PLANT.
  *
- * THE STATES ARE THE POINT, AND SPECIFICALLY THE BAD ONES. Default and hover are what you see
- * every day and are therefore already right. Empty, error, loading, long-text and the overlong
- * list are the bad-day path, and the bad day is the day the user shows up. The Bad days group
- * below is the list from docs/design-system.md §9, rendered rather than described.
- *
- * NO FIXTURE THAT COULD BE MISTAKEN FOR REAL DATA — but note the deliberate exception: the
- * quantities here are the walkthrough's patio, because a takeoff whose numbers are nonsense cannot
- * show whether the tabular-nums alignment works.
+ * COMPARE MODE is the one thing kept from the old three-way toggle, because it is not decoration:
+ * side by side is what catches a value that is right in one theme and wrong in the other, the kind
+ * of bug nobody finds by using the app one mode at a time (a real instance: a hover ground that
+ * measured 2.85:1 in light and 1.09:1 in dark, invisible on the right). It is opt-in and off by
+ * default rather than the resting state, which is the balance Luke asked for.
  */
 
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, createContext, useContext } from 'react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { Card, Row as CardRow } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Spinner } from '@/components/ui/spinner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Icon, ICON_NAMES, type IconName } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
@@ -40,26 +39,7 @@ import { StepCard, GateCheck } from '@/components/ui/step-card';
 import { PromptBar, PromptChip } from '@/components/ui/prompt-bar';
 import { ToolRail, ScaleBar, DimensionReadout } from '@/components/ui/canvas-chrome';
 import { ViewTabs, type ProjectView } from '@/components/ui/view-tabs';
-import {
-  EmptyState,
-  ErrorState,
-  NarratedProgress,
-  Skeleton,
-} from '@/components/ui/feedback';
-
-// ── the bad-day fixtures ─────────────────────────────────────────────────────────────────────
-// Deliberately hostile, because the friendly version of each is what every demo already shows.
-const SHORT_PLANT = 'Echinacea';
-const LONG_PLANT =
-  'Hydrangea paniculata ‘Limelight’: panicle hydrangea, the tall one nobody measured before planting it under the kitchen window';
-const SHORT_ERR = 'That address could not be found.';
-const LONG_ERR =
-  'We found your address but Columbia County returned no parcel for it, so there is no property line to measure from. You can still design on the aerial photo, and you can trace the boundary yourself: but every quantity will rest on that tracing until you do.';
-
-type Density = 'normal' | 'long';
-type ThemeMode = 'light' | 'dark' | 'both';
-const WIDTHS = [375, 768, 1280, 1920] as const;
-type Width = (typeof WIDTHS)[number];
+import { EmptyState, ErrorState, NarratedProgress, Skeleton } from '@/components/ui/feedback';
 
 /* SHIPS TO PRODUCTION, deliberately. The rack's whole job is review, and "works on mobile" means a
  * DEPLOYED build on a real phone — which matters more here than in most products, because this one
@@ -105,12 +85,86 @@ const GROUPS: { group: string; titles: string[] }[] = [
   },
 ];
 
-/* ONLY THE FIRST PANE CARRIES THE ANCHOR IDS. In `both` mode every section renders twice, and two
- * elements with one id is a broken document. The panes scroll together at the same offsets, so
- * anchoring the first also aligns the second. */
+/* ONLY THE FIRST PANE CARRIES THE ANCHOR IDS. In compare mode every section renders twice, and two
+ * elements sharing one id is a broken document. Both panes scroll together at the same offsets, so
+ * anchoring the first also aligns the second. In single-pane mode this is always true. */
 const AnchorCtx = createContext(true);
 
-function SectionNav({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
+// ── the collapsible nav, ported from run-trading's AppShell (v2 branch) ─────────────────────────
+//
+// Two behaviours, split at md, not one — copied faithfully because the split is the point:
+//   - Desktop: the rail sits in normal flow and PUSHES the content. Collapsing animates its width
+//     to 0 and hides it completely rather than leaving an icon strip, which would keep taking
+//     horizontal space and pop open on an accidental hover.
+//   - Mobile (< md): the rail never pushes. It is fixed, slides in over the content as an overlay
+//     with a scrim behind it, and closes on scrim tap, Escape, or picking a section.
+//
+// Simplified from the original in one respect: run-trading's version is a real app shell guarding
+// routes with a signed-in account menu at the bottom. This is a page-local review tool with
+// nothing behind the rail but anchors, so there is no account menu and the storage key is scoped
+// to this page rather than the whole product.
+const NAV_COLLAPSE_KEY = 'plot_kitchen_sink_nav_collapsed';
+const MOBILE_QUERY = '(max-width: 767px)';
+const isOverlay = () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
+
+function useCollapsibleNav() {
+  const [collapsed, setCollapsed] = useState(true);
+  // Transitions stay off until the stored preference is known, so the panel doesn't visibly
+  // swing into place on first paint.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let stored = false;
+    try {
+      stored = localStorage.getItem(NAV_COLLAPSE_KEY) === '1';
+    } catch {
+      // Private mode / blocked storage.
+    }
+    // The stored value is a desktop preference. On mobile the rail is an overlay, so honouring
+    // "open" would cover the whole page the instant it loads. Always start closed there.
+    setCollapsed(isOverlay() ? true : stored);
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (collapsed) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOverlay()) setCollapsed(true);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [collapsed]);
+
+  const toggle = useCallback(() => {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem(NAV_COLLAPSE_KEY, next ? '1' : '0');
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const closeIfOverlay = useCallback(() => {
+    if (isOverlay()) setCollapsed(true);
+  }, []);
+
+  return { collapsed, ready, toggle, closeIfOverlay };
+}
+
+function SectionNav({
+  scrollRef,
+  collapsed,
+  ready,
+  onToggle,
+  onNavigate,
+}: {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  collapsed: boolean;
+  ready: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
   const [active, setActive] = useState<string | null>(null);
 
   /* SCROLL-SPY ON THE CONTAINER, not the window: the rack scrolls an inner element, and an
@@ -135,116 +189,136 @@ function SectionNav({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement |
   }, [scrollRef]);
 
   return (
-    <nav
+    <aside
+      id="rack-nav"
       aria-label="Sections"
-      className="scroll-thin border-border hidden w-56 shrink-0 overflow-y-auto border-r py-6 pr-4 pl-3 lg:block"
+      // w-56, fixed on mobile and translated fully off-canvas, in normal flow and width-collapsed
+      // on desktop. `overflow-hidden` on the outer element stops the fixed-width inner column from
+      // reflowing while the desktop panel animates shut.
+      className={cn(
+        'bg-bg fixed inset-y-0 left-0 z-40 w-56 shrink-0 overflow-hidden md:relative md:z-auto md:translate-x-0',
+        // `ease-out` reads `--ease-out` from globals.css — the system's own curve, not a one-off.
+        ready && 'transition-all duration-300 ease-out',
+        collapsed ? '-translate-x-full md:w-0' : 'translate-x-0 md:w-56'
+      )}
     >
-      {GROUPS.map(({ group, titles }) => (
-        <div key={group} className="mb-6">
-          <p className="text-caption text-muted px-2 pb-1.5 uppercase">{group}</p>
-          <ul>
-            {titles.map((t) => {
-              const id = slug(t);
-              const on = active === id;
-              return (
-                <li key={t}>
-                  <button
-                    onClick={() => {
-                      scrollRef.current
-                        ?.querySelector(`#${id}`)
-                        ?.scrollIntoView({ block: 'start' });
-                    }}
-                    aria-current={on ? 'true' : undefined}
-                    className={cn(
-                      'text-small w-full truncate rounded-sm px-2 py-1 text-left transition-colors',
-                      on ? 'bg-surface text-text font-medium' : 'text-muted hover:text-text'
-                    )}
-                  >
-                    {t}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      <div className="border-border scroll-thin h-full w-56 overflow-y-auto border-r py-4 pr-2 pl-3">
+        <div className="mb-4 flex items-center justify-between pr-2 pl-1">
+          <span className="text-caption text-muted uppercase">Sections</span>
+          <IconButton name="collapse" label="Collapse sections" onClick={onToggle} />
         </div>
-      ))}
-    </nav>
+
+        {GROUPS.map(({ group, titles }) => (
+          <div key={group} className="mb-6">
+            <p className="text-caption text-muted px-2 pb-1.5 uppercase">{group}</p>
+            <ul>
+              {titles.map((t) => {
+                const id = slug(t);
+                const on = active === id;
+                return (
+                  <li key={t}>
+                    <button
+                      onClick={() => {
+                        scrollRef.current
+                          ?.querySelector(`#${id}`)
+                          ?.scrollIntoView({ block: 'start' });
+                        onNavigate();
+                      }}
+                      aria-current={on ? 'true' : undefined}
+                      className={cn(
+                        'text-small w-full truncate rounded-sm px-2 py-1 text-left transition-colors',
+                        on ? 'bg-surface text-text font-medium' : 'text-muted hover:text-text'
+                      )}
+                    >
+                      {t}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </aside>
   );
 }
 
 function Rack() {
-  const [theme, setTheme] = useState<ThemeMode>('both');
-  const [width, setWidth] = useState<Width>(1280);
-  const [density, setDensity] = useState<Density>('normal');
+  const [compare, setCompare] = useState(false);
+  const { collapsed, ready, toggle, closeIfOverlay } = useCollapsibleNav();
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const plant = density === 'long' ? LONG_PLANT : SHORT_PLANT;
-  const err = density === 'long' ? LONG_ERR : SHORT_ERR;
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
+      {/* Scrim: mobile only, while the rail is open. Always mounted rather than conditionally
+          rendered, so it fades in step with the panel's slide instead of popping on close once
+          the slide itself is smooth. Ported from run-trading's identical control. */}
+      <div
+        aria-hidden
+        onClick={toggle}
+        className={cn(
+          'bg-text/40 fixed inset-0 z-30 transition-opacity duration-300 md:hidden',
+          collapsed ? 'pointer-events-none opacity-0' : 'opacity-100'
+        )}
+      />
+
       <header className="border-border bg-bg shrink-0 border-b">
         {/* `pr-16` clears the app-wide ThemeToggle, which the root layout pins at `fixed top-4
-            right-4` and which therefore lands on top of these controls. Found by looking at the
-            rendered page rather than by reading it: the Density chips were sitting underneath it
-            and "long text" was clipped. */}
-        <div className="flex w-full flex-wrap items-center gap-6 px-4 py-3 pr-16">
-          <h1 className="text-h3 mr-auto">Kitchen sink</h1>
+            right-4` and would otherwise sit on top of these controls. */}
+        <div className="flex w-full flex-wrap items-center gap-3 px-4 py-3 pr-16">
+          {/* Reopen control: only while the rail is hidden, and only meaningful once we know
+              whether we're on mobile or desktop (see `ready`) so it doesn't flash in ahead of the
+              rail's own resolved state. */}
+          {collapsed && ready ? (
+            <IconButton name="menu" label="Open sections" onClick={toggle} />
+          ) : null}
 
-          <Field label="Theme">
-            {(['light', 'dark', 'both'] as const).map((t) => (
-              <Chip key={t} on={theme === t} onClick={() => setTheme(t)}>
-                {t}
-              </Chip>
-            ))}
-          </Field>
+          <h1 className="text-h3">Kitchen sink</h1>
 
-          <Field label="Width">
-            {WIDTHS.map((w) => (
-              <Chip key={w} on={width === w} onClick={() => setWidth(w)}>
-                {w}
-              </Chip>
-            ))}
-          </Field>
-
-          {/* The control that finds truncation bugs. Every string swaps for ~4x the length. */}
-          <Field label="Density">
-            {(['normal', 'long'] as const).map((d) => (
-              <Chip key={d} on={density === d} onClick={() => setDensity(d)}>
-                {d === 'long' ? 'long text' : 'normal'}
-              </Chip>
-            ))}
-          </Field>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={compare ? 'primary' : 'secondary'}
+              onClick={() => setCompare((c) => !c)}
+            >
+              Compare light / dark
+            </Button>
+          </div>
         </div>
       </header>
+      {/* NO SECOND ThemeToggle HERE. The root layout already pins one at `fixed top-4 right-4` on
+          every route, this page included — rendering another beside Compare produced two moon
+          icons doing the same job a few pixels apart. In compare mode the corner toggle still
+          flips the document root, which is harmless: both panes force their own `.dark` class
+          locally and ignore it. */}
 
-      {/* SIDE BY SIDE IS THE MODE THAT FINDS BUGS. Dark values here are per-mode literals rather
-          than inversions, so each one can be wrong in exactly one mode. Nobody finds that by
-          using the app. */}
       <div className="flex min-h-0 flex-1">
-        <SectionNav scrollRef={scrollRef} />
+        <SectionNav
+          scrollRef={scrollRef}
+          collapsed={collapsed}
+          ready={ready}
+          onToggle={toggle}
+          onNavigate={closeIfOverlay}
+        />
         <div
           ref={scrollRef}
           className={cn(
-            'scroll-thin flex min-h-0 flex-1 overflow-y-auto pl-8',
-            theme === 'both' && 'divide-border divide-x'
+            'scroll-thin flex min-h-0 flex-1 overflow-y-auto',
+            compare && 'divide-border divide-x'
           )}
         >
-          {(theme === 'both' ? (['light', 'dark'] as const) : ([theme] as const)).map(
+          {(compare ? (['light', 'dark'] as const) : (['ambient'] as const)).map(
             (mode, paneIndex) => (
               <AnchorCtx.Provider key={mode} value={paneIndex === 0}>
+                {/* `ambient` takes no class of its own: it inherits whatever `.dark` state is on
+                    <html> from the real ThemeToggle above. `light` / `dark` in compare mode force
+                    the class locally, independent of the document root, which is the only way to
+                    show both at once. */}
                 <div className={cn('min-w-0 flex-1', mode === 'dark' && 'dark')}>
                   <div className="bg-bg text-text min-h-full">
-                    <div
-                      className="scroll-thin mx-auto overflow-x-auto"
-                      style={{ maxWidth: width }}
-                    >
-                      <div className="space-y-12 px-4 py-10" style={{ width }}>
-                        <p className="text-caption text-muted">
-                          {mode} · {width}px · {density}
-                        </p>
-                        <Sections plant={plant} err={err} />
-                      </div>
+                    <div className="space-y-12 px-6 py-10 md:px-10">
+                      {compare ? <p className="text-caption text-muted">{mode}</p> : null}
+                      <Sections />
                     </div>
                   </div>
                 </div>
@@ -257,9 +331,16 @@ function Rack() {
   );
 }
 
-// ── the sections ─────────────────────────────────────────────────────────────────────────────
+// ── the bad-day fixtures ─────────────────────────────────────────────────────────────────────
+// Deliberately hostile, because the friendly version of each is what every demo already shows.
+// These used to be behind a Density toggle Luke didn't want; the coverage stays, just not as a
+// control someone has to understand first — a genuinely long name is simply one of the fixed rows.
+const LONG_PLANT =
+  'Hydrangea paniculata ‘Limelight’: panicle hydrangea, the tall one nobody measured before planting it under the kitchen window';
+const LONG_ERR =
+  'We found your address but Columbia County returned no parcel for it, so there is no property line to measure from. You can still design on the aerial photo, and you can trace the boundary yourself: but every quantity will rest on that tracing until you do.';
 
-function Sections({ plant, err }: { plant: string; err: string }) {
+function Sections() {
   const [view, setView] = useState<ProjectView>('Plan');
   const [tool, setTool] = useState<IconName>('draw');
   const [gate, setGate] = useState(false);
@@ -297,7 +378,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
           </Button>
         </Line>
         <Line label="long label">
-          <Button>{plant}</Button>
+          <Button>{LONG_PLANT}</Button>
         </Line>
       </Section>
 
@@ -319,14 +400,20 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         </Line>
       </Section>
 
-      <Section title="ThemeToggle" note="One control, both modes. Also drives `color-scheme`, so native scrollbars and date pickers follow.">
+      <Section
+        title="ThemeToggle"
+        note="The real control, used above in single-pane mode. Also drives `color-scheme`, so native scrollbars and date pickers follow."
+      >
         <Line label="default">
           <ThemeToggle />
         </Line>
       </Section>
 
       {/* ── Inputs ───────────────────────────────────────────────────────────────────────── */}
-      <Section title="Input" note="Empty, filled, disabled, error. The error state must survive text longer than the field.">
+      <Section
+        title="Input"
+        note="Empty, filled, disabled, error. The error state must survive text longer than the field."
+      >
         <Line label="empty">
           <Input placeholder="123 Main St, Portage WI" />
         </Line>
@@ -339,12 +426,15 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         <Line label="error">
           <div className="w-full max-w-md">
             <Input defaultValue="not an address" aria-invalid />
-            <p className="text-small text-danger mt-1.5">{err}</p>
+            <p className="text-small text-danger mt-1.5">That address could not be found.</p>
           </div>
         </Line>
       </Section>
 
-      <Section title="Textarea" note="Same states as Input, because these are one object at two heights.">
+      <Section
+        title="Textarea"
+        note="Same states as Input, because these are one object at two heights."
+      >
         <Line label="empty">
           <Textarea placeholder="What should this area feel like?" />
         </Line>
@@ -481,13 +571,9 @@ function Sections({ plant, err }: { plant: string; err: string }) {
             unconfirmed
           />
           <QuantityRow item="Bedding sand" amount="0.6 cu yd" unconfirmed />
-          <QuantityRow
-            item="Flagstone"
-            amount="177 sq ft"
-            reason="168 plus 5% for cuts"
-          />
+          <QuantityRow item="Flagstone" amount="177 sq ft" reason="168 plus 5% for cuts" />
           <QuantityRow item="Steel edging" amount="57 ft" />
-          <QuantityRow item={plant} amount="3" />
+          <QuantityRow item="Echinacea" amount="3" />
         </Card>
       </Section>
 
@@ -497,9 +583,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
       >
         <Line label="tones">
           <div className="w-full max-w-xl space-y-3">
-            <CallOut tone="note">
-              Imagery for this property was captured in April 2026.
-            </CallOut>
+            <CallOut tone="note">Imagery for this property was captured in April 2026.</CallOut>
             <CallOut
               tone="check"
               action={
@@ -513,9 +597,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
             <CallOut tone="warn">
               This sits downhill of the wet spot you marked. Water will run onto it.
             </CallOut>
-            <CallOut tone="stop">
-              Call 811 before any digging. Wait for the marks.
-            </CallOut>
+            <CallOut tone="stop">Call 811 before any digging. Wait for the marks.</CallOut>
           </div>
         </Line>
       </Section>
@@ -573,7 +655,10 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         </Line>
       </Section>
 
-      <Section title="Card" note="Bordered, not shadowed. A field guide has no drop shadows: shadow is reserved for things genuinely floating over the canvas.">
+      <Section
+        title="Card"
+        note="Bordered, not shadowed. A field guide has no drop shadows: shadow is reserved for things genuinely floating over the canvas."
+      >
         <Line label="default">
           <Card className="max-w-sm">
             <p className="text-h3">Back patio</p>
@@ -593,12 +678,11 @@ function Sections({ plant, err }: { plant: string; err: string }) {
       </Section>
 
       {/* ── States ───────────────────────────────────────────────────────────────────────── */}
-      <Section title="EmptyState" note="Names what is missing and offers exactly one action. 'No data' is not an empty state.">
-        <EmptyState
-          icon="place"
-          title="No property yet"
-          action={<Button>Add your address</Button>}
-        >
+      <Section
+        title="EmptyState"
+        note="Names what is missing and offers exactly one action. 'No data' is not an empty state."
+      >
+        <EmptyState icon="place" title="No property yet" action={<Button>Add your address</Button>}>
           Give us your address and we will pull your lot lines, your house and a scaled aerial from
           public records. You can correct anything we get wrong.
         </EmptyState>
@@ -616,7 +700,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
             </div>
           }
         >
-          {err}
+          {LONG_ERR}
         </ErrorState>
       </Section>
 
@@ -646,7 +730,10 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         </Line>
       </Section>
 
-      <Section title="Skeleton" note="The parts that HAVE loaded stay usable. Never a blocking spinner over a whole screen.">
+      <Section
+        title="Skeleton"
+        note="The parts that HAVE loaded stay usable. Never a blocking spinner over a whole screen."
+      >
         <Line label="default">
           <div className="w-full max-w-sm space-y-2">
             <Skeleton className="h-6 w-1/2" />
@@ -705,12 +792,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         note="The difference between 'this failed and your work is gone' and 'this failed and your work is where you left it'. For an action that costs money that is the whole difference."
       >
         <div className="space-y-4">
-          <ErrorState
-            title="That render didn't finish"
-            action={
-              <Button size="sm">Try again</Button>
-            }
-          >
+          <ErrorState title="That render didn't finish" action={<Button size="sm">Try again</Button>}>
             Your shape and your description are still here, and this one was not counted against
             today&rsquo;s allowance.
           </ErrorState>
@@ -731,14 +813,14 @@ function Sections({ plant, err }: { plant: string; err: string }) {
 
       <Section
         title="The overlong list"
-        note="Forty rows at the density a real property reaches after a few seasons. Checks that the row rhythm survives repetition and that nothing depends on a short list."
+        note="Forty rows at the density a real property reaches after a few seasons. Checks that the row rhythm survives repetition and that nothing depends on a short list, including the one genuinely long name in the run."
       >
         <Card className="p-0 px-6">
           <div className="scroll-thin max-h-80 overflow-y-auto">
             {Array.from({ length: 40 }, (_, i) => (
               <QuantityRow
                 key={i}
-                item={i % 7 === 0 ? plant : `Fixture item ${i + 1}`}
+                item={i % 7 === 0 ? LONG_PLANT : `Fixture item ${i + 1}`}
                 amount={`${(i + 1) * 3} ea`}
                 unconfirmed={i % 5 === 0}
               />
@@ -750,7 +832,7 @@ function Sections({ plant, err }: { plant: string; err: string }) {
       {/* ── Marks ────────────────────────────────────────────────────────────────────────── */}
       <Section
         title="Icon"
-        note="EVERY NAME IN THE MAP, generated from ICON_NAMES rather than listed by hand: so a mark added to the wrapper and never shown here is impossible. All at stroke 1.5; lucide ships 2, which reads chunky against a 16px body face and a hairline border."
+        note="EVERY NAME IN THE MAP, generated from ICON_NAMES rather than listed by hand: so a mark added to the wrapper and never shown here is impossible. Stroke is 1.5, checked against plot's own type scale rather than assumed. See the comment in icon.tsx."
       >
         <div className="flex flex-wrap gap-4">
           {ICON_NAMES.map((n) => (
@@ -763,7 +845,10 @@ function Sections({ plant, err }: { plant: string; err: string }) {
       </Section>
 
       {/* ── Tokens and proofs ────────────────────────────────────────────────────────────── */}
-      <Section title="Type ramp" note="Every piece of text in the product is one of these. If a string is not, either the string is wrong or this table is.">
+      <Section
+        title="Type ramp"
+        note="Every piece of text in the product is one of these. If a string is not, either the string is wrong or this table is."
+      >
         <div className="space-y-3">
           {(
             [
@@ -785,7 +870,10 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         </div>
       </Section>
 
-      <Section title="Spacing ramp" note="8 is the base rhythm; 4 only for tight internals. Everything is one of these steps: never an arbitrary value, never a half step.">
+      <Section
+        title="Spacing ramp"
+        note="8 is the base rhythm; 4 only for tight internals. Everything is one of these steps: never an arbitrary value, never a half step."
+      >
         <div className="space-y-2">
           {([1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24] as const).map((step) => (
             <div key={step} className="flex items-center gap-4">
@@ -817,7 +905,10 @@ function Sections({ plant, err }: { plant: string; err: string }) {
         </div>
       </Section>
 
-      <Section title="Ink roles" note="Colour is reserved for meaning. The photo and the plan are the coloured things; the interface is paper and ink.">
+      <Section
+        title="Ink roles"
+        note="Colour is reserved for meaning. The photo and the plan are the coloured things; the interface is paper and ink."
+      >
         <div className="space-y-2">
           {(
             [
@@ -898,37 +989,5 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
       <p className="text-caption text-muted mb-2 uppercase">{label}</p>
       <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-caption text-muted">{label}</span>
-      <div className="flex gap-1">{children}</div>
-    </div>
-  );
-}
-
-function Chip({
-  on,
-  onClick,
-  children,
-}: {
-  on: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={on}
-      className={cn(
-        'text-caption rounded-sm px-2 py-1 transition-colors',
-        on ? 'bg-accent text-accent-foreground' : 'text-muted hover:text-text'
-      )}
-    >
-      {children}
-    </button>
   );
 }
