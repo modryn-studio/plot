@@ -9,12 +9,12 @@
  * IT IS WHERE YOU SEE THE SYSTEM, NOT WHERE YOU DESIGN IT. When something looks wrong here the fix
  * is a token in globals.css, never a patch on this page. This file is a mirror.
  *
- * DEFAULT VIEW IS ONE PANE, driven by the SAME theme toggle every other route uses — the one the
- * root layout pins at `fixed top-4 right-4` — not a light/dark/both chip row local to this page.
- * The first draft of this rack simulated width with a 375/768/1280/1920 control and swapped every
- * string for a long-text fixture behind a Density toggle. Both are gone (Luke, 2026-08-17): the
- * browser's own devtools already resize a window, and a control whose job needs explaining has
- * failed at being a control. Long-text coverage did not go with it — see the note at LONG_PLANT.
+ * DEFAULT VIEW IS ONE PANE, driven by the app's real ThemeToggle sitting in this page's own
+ * header — not a light/dark/both chip row, and not a button floating over the corner. The first
+ * draft of this rack simulated width with a 375/768/1280/1920 control and swapped every string for
+ * a long-text fixture behind a Density toggle. Both are gone (Luke, 2026-08-17): the browser's own
+ * devtools already resize a window, and a control whose job needs explaining has failed at being a
+ * control. Long-text coverage did not go with it — see the note at LONG_PLANT.
  *
  * COMPARE MODE is the one thing kept from the old three-way toggle, because it is not decoration:
  * side by side is what catches a value that is right in one theme and wrong in the other, the kind
@@ -103,6 +103,13 @@ const AnchorCtx = createContext(true);
 // routes with a signed-in account menu at the bottom. This is a page-local review tool with
 // nothing behind the rail but anchors, so there is no account menu and the storage key is scoped
 // to this page rather than the whole product.
+/* ONE header height for the whole rack, published so nothing has to guess. Three things sit in
+ * that band across the top and any disagreement between them shows as a step in the top edge: the
+ * rail's own header row, the content header, and the reopen control that appears where the rail
+ * was. run-trading shipped exactly that bug — its constant said 3.25rem while the sidebar row was
+ * `h-16`, 12px out — which is the reason this is a constant rather than three literals. */
+const RACK_HEADER_H = '4rem';
+
 const NAV_COLLAPSE_KEY = 'plot_kitchen_sink_nav_collapsed';
 const MOBILE_QUERY = '(max-width: 767px)';
 const isOverlay = () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
@@ -159,7 +166,7 @@ function SectionNav({
   onToggle,
   onNavigate,
 }: {
-  scrollRef: React.RefObject<HTMLDivElement | null>;
+  scrollRef: React.RefObject<HTMLElement | null>;
   collapsed: boolean;
   ready: boolean;
   onToggle: () => void;
@@ -202,12 +209,23 @@ function SectionNav({
         collapsed ? '-translate-x-full md:w-0' : 'translate-x-0 md:w-56'
       )}
     >
-      <div className="border-border scroll-thin h-full w-56 overflow-y-auto border-r py-4 pr-2 pl-3">
-        <div className="mb-4 flex items-center justify-between pr-2 pl-1">
+      {/* Fixed inner width so the contents don't reflow while the desktop panel animates shut. */}
+      <div className="border-border flex h-full w-56 flex-col border-r">
+        {/* THE RAIL'S OWN TOP ROW IS EXACTLY RACK_HEADER_H, matching the content header opposite
+            it. Three things live in that band across the top of the shell — this row, the content
+            header, and the reopen control that appears where the rail was — and any disagreement
+            between them shows as a step in the top edge. run-trading hit precisely that (its
+            constant said 3.25rem while the sidebar row was h-16, 12px out) which is why the height
+            is one shared value here rather than three hand-typed ones. */}
+        <div
+          className="flex shrink-0 items-center justify-between pr-2 pl-4"
+          style={{ height: RACK_HEADER_H }}
+        >
           <span className="text-caption text-muted uppercase">Sections</span>
           <IconButton name="collapse" label="Collapse sections" onClick={onToggle} />
         </div>
 
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-3 pb-6">
         {GROUPS.map(({ group, titles }) => (
           <div key={group} className="mb-6">
             <p className="text-caption text-muted px-2 pb-1.5 uppercase">{group}</p>
@@ -238,6 +256,7 @@ function SectionNav({
             </ul>
           </div>
         ))}
+        </div>
       </div>
     </aside>
   );
@@ -246,10 +265,26 @@ function SectionNav({
 function Rack() {
   const [compare, setCompare] = useState(false);
   const { collapsed, ready, toggle, closeIfOverlay } = useCollapsibleNav();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement>(null);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
+    /* THE RAIL IS A SIBLING OF THE CONTENT COLUMN, NOT A CHILD BELOW A FULL-WIDTH HEADER.
+     *
+     * This is the structure of run-trading's AppShell, read off the running /sessions page rather
+     * than guessed, and it is what makes the rail reach the top of the window:
+     *
+     *   div.flex.h-dvh.overflow-hidden
+     *     aside                       t:0  l:0    h:full     ← starts at the very top
+     *     div.flex-col                t:0  l:224
+     *       header                    t:0         h:64       ← lives INSIDE the content column
+     *       main.overflow-y-auto      t:64                   ← the only scroller
+     *
+     * The previous version put the header above the whole row, which pushed the rail down by its
+     * height and ran the header across the top of it. Two consequences beyond the look: the header
+     * spanned the rail it was supposed to sit beside, and the scroll container started at the top
+     * of the window, so the scrollbar travelled across the title band instead of beginning under
+     * it. */
+    <div className="flex h-dvh overflow-hidden">
       {/* Scrim: mobile only, while the rail is open. Always mounted rather than conditionally
           rendered, so it fades in step with the panel's slide instead of popping on close once
           the slide itself is smooth. Ported from run-trading's identical control. */}
@@ -262,20 +297,29 @@ function Rack() {
         )}
       />
 
-      <header className="border-border bg-bg shrink-0 border-b">
-        {/* `pr-16` clears the app-wide ThemeToggle, which the root layout pins at `fixed top-4
-            right-4` and would otherwise sit on top of these controls. */}
-        <div className="flex w-full flex-wrap items-center gap-3 px-4 py-3 pr-16">
-          {/* Reopen control: only while the rail is hidden, and only meaningful once we know
-              whether we're on mobile or desktop (see `ready`) so it doesn't flash in ahead of the
-              rail's own resolved state. */}
+      <SectionNav
+        scrollRef={scrollRef}
+        collapsed={collapsed}
+        ready={ready}
+        onToggle={toggle}
+        onNavigate={closeIfOverlay}
+      />
+
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        <header
+          className="border-border bg-bg relative z-20 flex shrink-0 items-center gap-3 border-b px-4"
+          style={{ height: RACK_HEADER_H }}
+        >
+          {/* Reopen control: only while the rail is hidden, and only once we know whether we are
+              on mobile or desktop (see `ready`), so it does not flash in ahead of the rail's own
+              resolved state. Sits in the same band as the rail's header row opposite it. */}
           {collapsed && ready ? (
             <IconButton name="menu" label="Open sections" onClick={toggle} />
           ) : null}
 
           <h1 className="text-h3">Kitchen sink</h1>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <Button
               size="sm"
               variant={compare ? 'primary' : 'secondary'}
@@ -283,24 +327,19 @@ function Rack() {
             >
               Compare light / dark
             </Button>
+            {/* The app's real toggle, rendered here rather than floating over the corner. In
+                compare mode it is hidden: with both themes on screen at once there is no single
+                current theme for it to represent, and the two panes force their own class locally
+                and would ignore it anyway. */}
+            {!compare ? <ThemeToggle /> : null}
           </div>
-        </div>
-      </header>
-      {/* NO SECOND ThemeToggle HERE. The root layout already pins one at `fixed top-4 right-4` on
-          every route, this page included — rendering another beside Compare produced two moon
-          icons doing the same job a few pixels apart. In compare mode the corner toggle still
-          flips the document root, which is harmless: both panes force their own `.dark` class
-          locally and ignore it. */}
+        </header>
 
-      <div className="flex min-h-0 flex-1">
-        <SectionNav
-          scrollRef={scrollRef}
-          collapsed={collapsed}
-          ready={ready}
-          onToggle={toggle}
-          onNavigate={closeIfOverlay}
-        />
-        <div
+        {/* THE SCROLLER, and it is a SIBLING BELOW THE HEADER rather than the whole pane. That is
+            the difference between a scrollbar running the full height of the window and one that
+            starts under the title band — the latter being right, because the header is not part
+            of what scrolls. */}
+        <main
           ref={scrollRef}
           className={cn(
             'scroll-thin flex min-h-0 flex-1 overflow-y-auto',
@@ -311,7 +350,7 @@ function Rack() {
             (mode, paneIndex) => (
               <AnchorCtx.Provider key={mode} value={paneIndex === 0}>
                 {/* `ambient` takes no class of its own: it inherits whatever `.dark` state is on
-                    <html> from the real ThemeToggle above. `light` / `dark` in compare mode force
+                    <html> from the header's ThemeToggle. `light` / `dark` in compare mode force
                     the class locally, independent of the document root, which is the only way to
                     show both at once. */}
                 <div className={cn('min-w-0 flex-1', mode === 'dark' && 'dark')}>
@@ -325,7 +364,7 @@ function Rack() {
               </AnchorCtx.Provider>
             )
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

@@ -236,8 +236,15 @@ export function Login() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* The theme toggle is rendered once, globally, in src/app/layout.tsx. */}
-      <main className="flex flex-1 items-center justify-center px-6 py-16">
+      {/* Rendered here rather than globally. The root layout used to pin one toggle over every
+          route; it was removed because a fixed button in the top-right corner collides with any
+          surface that has a real header of its own. This view was already importing ThemeToggle
+          without rendering it, so it was relying on that global one and would otherwise have lost
+          the control entirely. */}
+      <div className="flex justify-end px-6 pt-4">
+        <ThemeToggle />
+      </div>
+      <main className="flex flex-1 items-center justify-center px-6 pb-16">
         <div className="w-full max-w-sm">
           <h1 className="text-h1 text-center text-balance">{site.name}</h1>
           <p className="text-body-lg text-muted mt-4 text-center text-pretty">{site.description}</p>

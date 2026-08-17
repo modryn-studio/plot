@@ -3,7 +3,6 @@ import { Inter, Source_Serif_4 } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/config/site';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import './globals.css';
 
 /* TWO FACES, AND THE SERIF IS THE POINT. A field guide is a serif document and every AI SaaS is
@@ -52,11 +51,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${sourceSerif.variable} ${inter.variable}`}
     >
       <body className="antialiased">
-        <ThemeProvider>
-          {/* One toggle for the whole app. Move it into a real header when the project grows one. */}
-          <ThemeToggle className="fixed top-4 right-4 z-50" />
-          {children}
-        </ThemeProvider>
+        {/* NO GLOBAL FLOATING ThemeToggle. The base shipped one pinned at `fixed top-4 right-4`
+            with a note to "move it into a real header when the project grows one" — that moment
+            arrived. A fixed button over every route lands on top of whatever a real shell puts in
+            its top-right corner, which is exactly what it did to the kitchen sink's header.
+            Each surface with a header now renders its own; see kitchen-sink and the login view. */}
+        <ThemeProvider>{children}</ThemeProvider>
         {/* Vercel Web Analytics: pageviews only, no cookie, no cross-site identity, so it does not
             add anything to the Privacy Policy's cookie section. Inert in development and on any
             non-Vercel host, so local runs never emit. Our own /api/track handles product events;
