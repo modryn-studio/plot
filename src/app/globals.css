@@ -97,17 +97,51 @@
   html {
     @apply bg-bg text-text;
     font-family: var(--font-sans);
+
+    /* THE NATIVE UI FOLLOWS THE THEME. `.scroll-thin` themes the scrollbars we own; it cannot
+       reach one the BROWSER draws — the document's own, and the ones inside native controls like
+       date pickers and selects. Those read `color-scheme`, and with it unset the UA assumes light
+       and paints a light-grey bar down the side of a near-black page.
+       Driven by the .dark class below rather than `prefers-color-scheme`, because the theme here
+       is an explicit user choice that is allowed to disagree with the OS. */
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3 {
     font-family: var(--font-heading);
   }
+
+  /* Keyboard-focus baseline for every interactive element. Mouse users unaffected.
+     This is not optional on a product used outdoors in sunlight with gloves on. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
 
-/* Quantities sit in columns and must align. A takeoff whose numbers do not line up is a takeoff
-   that looks guessed. Applied to any element rendering a measurement or a count. */
-.tabular {
-  font-variant-numeric: tabular-nums;
+.dark {
+  color-scheme: dark;
+}
+
+/* NOTE ON TABULAR FIGURES. Quantities sit in columns and must align — a takeoff whose numbers do
+   not line up reads as guessed. Use Tailwind's built-in `tabular-nums` for that, NOT a custom
+   class: a `.tabular` utility was declared here briefly and the token linter rejected it within a
+   minute, correctly. It looked exactly like a design-system class and was not one, which is the
+   precise failure this rule exists to catch. The framework already ships the utility. */
+
+/* Scrollbars we own. Applied to any element that scrolls, never the document (which should not).
+   Without this a scroll region gets the platform's grey slab, which reads as unstyled.
+
+   DECLARED WITH @utility, NOT AS A PLAIN CLASS. Tailwind v4 only knows about a class if it is
+   registered, and the token linter reads the same list: a bare `.scroll-thin {}` here compiles
+   fine but every use of it is flagged as a classname that is not a Tailwind class. That is the
+   rule working, not a false positive, and @utility is the answer rather than an allowlist entry. */
+@utility scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 @keyframes blink {

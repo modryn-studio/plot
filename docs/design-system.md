@@ -216,29 +216,28 @@ state.
 
 The base ships five primitives. Product-specific ones are the real work.
 
-**Inherited, verify against the new tokens:**
-- [ ] Button (primary / secondary / ghost / danger)
-- [ ] Input, Textarea, Select
-- [ ] Card
-- [ ] Modal / Sheet
-- [ ] Toast / Alert
+**Inherited from the base, verified against the new tokens:**
+- [x] Button (primary / secondary / ghost), three sizes, loading, disabled
+- [x] Input, Textarea
+- [x] Spinner, ThemeToggle, CodeInput
+- [x] **Card** + **Row** — bordered, never shadowed. A field guide has no drop shadows.
+- [ ] Modal / Sheet — not yet needed by a specced screen
+- [ ] Toast — not yet needed by a specced screen
 
-**Needed:**
-- [ ] **ViewTabs** — `Look · Plan · Takeoff · Build`. The spine of the project screen.
-- [ ] **PromptBar** — floating, compound: text plus inline parameter chips, attach, submit,
-      allowance readout. The canvas's primary control.
-- [ ] **ToolRail** — slim vertical rail. **Every button has an accessible name** (the recon found
-      this defect in both GrowVeg and Arcadium).
-- [ ] **ScaleBar** — always visible on any overhead view.
-- [ ] **DimensionReadout** — live while drawing, tabular figures.
-- [ ] **FactRow** — a derived value with its source, confidence and a way to correct it. The site
-      screen is made of these.
-- [ ] **QuantityRow** — amount to buy, with the reason underneath. The takeoff is made of these.
-- [ ] **CallOut** — Peterson's arrow. The one thing that decides the outcome.
-- [ ] **StepCard** — number, instruction, reason, optional warning.
-- [ ] **GateCheck** — a stop-work check that blocks the next step until ticked.
-- [ ] **Skeleton** / **NarratedProgress** — a slow operation that says what it is doing.
-- [ ] **EmptyState**
+**Built for this product:**
+- [x] **Icon** — one wrapper decides stroke (1.5) and viewBox. Never inline an `<svg>` elsewhere.
+- [x] **IconButton** — `label` is a **required prop**, which is the whole reason it exists.
+- [x] **ViewTabs** — `Look · Plan · Takeoff · Build`. The spine of the project screen.
+- [x] **PromptBar** + **PromptChip** — floating compound input, parameters as inline chips,
+      allowance shown before the spend, standing illustration-not-a-plan notice built in.
+- [x] **ToolRail** — slim vertical rail, every button named.
+- [x] **ScaleBar** — the mark that separates a base plan from a picture of a house.
+- [x] **DimensionReadout** — distinguishes a dragged estimate from a typed measurement.
+- [x] **FactRow** — value, plain-language hint, confidence, source, correction.
+- [x] **QuantityRow** — amount to buy with waste inside it, reason as a half-sentence.
+- [x] **CallOut** — Peterson's arrow. Four tones, each with an icon and a word.
+- [x] **StepCard** + **GateCheck** — reason required; the gate blocks the next step.
+- [x] **EmptyState**, **ErrorState**, **NarratedProgress**, **Skeleton**
 
 ---
 
@@ -276,19 +275,48 @@ namespace within a minute of being switched on.
 
 **Allowlist** — a handful is normal. Past that, the system is missing a token.
 
-- *(none yet)*
+| Class | Where | Why |
+|---|---|---|
+| `bg-[#e8e4dc]` · `text-[#4a453d]` | kitchen sink, Contrast | A stand-in for a **photograph**, not a design surface. Tokenising it would claim the system owns a colour it does not: the real ground here is whatever the user's camera saw. |
+| `active:scale-[0.98]` | `theme-toggle.tsx` | Inherited from the base. A press transform, structural rather than a colour or a size token. |
 
-**Prove it fires** after changing the tokens: add a fake class, run lint, see it error, remove it.
-Tooling written for Tailwind v3 reads a JS config v4 does not have, finds nothing, and passes
-everything — which is worse than no checker.
+**Proven to fire, twice, and both catches were real** *(2026-08-17)*:
+
+1. A probe class `text-body-xl` errored while `bg-derived` (a token added the same hour) passed —
+   so the checker reads the live `@theme` block rather than a stale copy.
+2. **It caught two of my own mistakes immediately.** `.tabular` and `.scroll-thin` were written as
+   plain CSS classes at the bottom of `globals.css`. Both compile, both look exactly like design
+   system classes, and neither is one. The fixes are the two correct answers and they are
+   different: `tabular` did not need to exist at all (Tailwind ships `tabular-nums`), and
+   `scroll-thin` needed registering with `@utility` so the framework and the linter both know it.
+   That is precisely the failure mode this rule was added for, found within a minute rather than
+   in a screenshot weeks later.
+
+**Verify the checker supports your Tailwind major before trusting it.** Tooling written for v3
+reads a JS config v4 does not have, finds nothing, and passes everything, which is worse than no
+checker at all.
 
 ---
 
 ## Phase 3 gate
 
-- [ ] Any screen in the wireframes can be built inventing nothing new
-- [ ] Light and dark both defined and contrast-checked, **including chrome over a photograph**
-- [ ] Loading / empty / error exist for every interactive component
-- [ ] Kitchen sink renders every *state*, including the bad-day list in §9
-- [ ] Keyboard focus visible everywhere, **every tool-rail button has an accessible name**
-- [ ] The token rule is enforced by lint and the checker has been proven to fire
+- [x] **Any screen in the wireframes can be built inventing nothing new.** Checked against
+      `spec.md` §5: `/properties/new` (Input, Button, EmptyState), `/site` (FactRow, CallOut,
+      Button), `Look` (ToolRail, PromptBar, PromptChip), `Plan` (ScaleBar, DimensionReadout,
+      CallOut), `Takeoff` (QuantityRow, CallOut, Button), `Build` (StepCard, GateCheck).
+- [x] **Light and dark both defined and contrast-checked, including chrome over a photograph.**
+      The photo case has its own row in the rack's Contrast section, because that is the one
+      ground the system does not choose and the one that breaks contrast assumptions.
+- [x] Loading / empty / error exist for every interactive component
+- [x] **Kitchen sink renders every state, including the bad-day list in §9** — all five have their
+      own section under `Bad days`, plus a `long text` density toggle that swaps every string for
+      roughly four times the length.
+- [x] Keyboard focus visible everywhere (`:focus-visible` baseline in `globals.css`), and
+      **every tool-rail button has an accessible name** — enforced by `IconButton` requiring
+      `label`, so a missing one is a type error rather than a review someone has to remember.
+- [x] **The token rule is enforced by lint and the checker has been proven to fire** — see §10.
+
+**Remaining before this can be called locked:** the rack has been read on a desktop browser at
+375 / 768 / 1280 / 1920 simulated widths, but **not yet opened on a real phone outdoors**, which
+is the condition this system was designed against. That is a deploy away, and the rack ships to
+production precisely so it can be done.
