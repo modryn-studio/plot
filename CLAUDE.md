@@ -46,13 +46,12 @@ shadow stacked under a border on the secondary button, `Card` inverted to border
 
 So the whole design layer was replaced with `modryn-base`'s current one — `globals.css`,
 `components/ui/`, `components/shell/`, `app/kitchen-sink/`, `layout.tsx`, `eslint.config.mjs`.
-**Plot is now on the house system, unrecoloured.**
-
-**The next design task is to re-lock it deliberately**, against `design-rules.md` §"What a new
-project CHANGES, and what it must NOT" — the colour role VALUES, `--font-heading`, and the radius
-scale, and nothing else. The previous pass's *thinking* is still good and is recorded in
-`docs/design-system.md`; its *implementation* is gone. Re-derive from the rules, do not paste the
-old values back.
+**Plot was then re-locked on the house system, and that work is DONE** — this paragraph used to say
+re-locking was the next task, and it was already stale by the time anyone read it. `5ef19e3` locked
+warm paper + cyanotype and `cc92710` settled `elevated`. Exactly the four permitted changes were
+made and nothing else: the colour role VALUES, the semantics, `--font-heading` (split two ways, the
+one structural divergence), and the radius scale at 4/8/12. **`docs/design-system.md` is the
+record, and it is locked.**
 
 The eight product-specific components from that pass (`CallOut`, `FactRow`, `QuantityRow`,
 `StepCard`, `PromptBar`, `ToolRail`/`ScaleBar`/`DimensionReadout`, `ViewTabs`, `NarratedProgress`)
@@ -124,6 +123,7 @@ each lives in `modryn-hq@v4:playbooks/scar-tissue.md`.
 before touching a token, a primitive or the shell.** The ones that bite hardest:
 
 - **A `@theme` shadow value must stay INDIRECT** (`--shadow-card: var(--elevation-card)`). Tailwind resolves a directly-declared `@theme` shadow at build time and bakes it into the utility, so the `.dark` override does nothing and every shadow renders its light value. **This repo shipped that bug on 2026-08-17.**
+- **Scoping `.dark` to a SUBTREE only flips the LITERAL tokens; the DERIVED ones stay baked at their light values** unless `.dark` also restates them. `@theme` emits to `:root`, and a custom property's computed value has its `var()`s already substituted on the element that declares it, so `--color-accent-foreground: var(--color-elevated)` resolves against LIGHT elevated at `:root` and is inherited as that finished colour. `.dark` on `<html>` works only because html IS `:root`. **`/login` shipped this on 2026-08-20**: its primary CTA rendered the light label on the dark accent at **2.34:1**, and `pressed` flashed near-white. Fixed by restating the five derivations inside `.dark` in `globals.css` — those copies must stay character-identical to their `@theme` originals. **`/kitchen-sink` cannot catch this**, because it measures at the document level where the bug does not exist.
 - **A control gets a border OR a drop shadow, never both**, and only `Card`, modals and popovers may cast a drop shadow at all. Every button-class control presses with the `shadow-press` INSET.
 - **Muted is METADATA; ink is PROSE. Two tiers, never three.** `muted on surface` is 4.40:1 here, so muted prose on a card already fails AA. Hierarchy below body drops through size and weight.
 - **Shape follows the control's CONTENT.** Icon-only is a circle; every labelled control shares one radius, fields included.

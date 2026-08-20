@@ -194,6 +194,48 @@ as much as no tool. Every number above was read off the rendered page.
 
 Type steps render exactly as declared (48/52, 36/40, 28/32, 22/28, 18/28).
 
+### What the sink structurally cannot measure, found on /login (2026-08-20)
+
+Two failures got through a page built to catch failures, and both are outside what it looks at.
+Recording them because the shape matters more than either bug.
+
+**1. A scoped theme does not carry the derived tokens.** `/login` is dark in both themes, via
+`.dark` on its own root. Every LITERAL token flipped and every DERIVED one did not: `@theme` emits
+to `:root`, and a custom property's computed value has its `var()`s already substituted on the
+element that declares it, so `--color-accent-foreground: var(--color-elevated)` had resolved
+against LIGHT `elevated` and was inherited as that finished colour. `.dark` on `<html>` works only
+because html *is* `:root`. The primary CTA rendered `#fffefc` on `#79aedd` at **2.34:1**, and
+`--color-pressed` was the light page ground, so every press flashed near-white.
+
+Fixed by restating the five derivations (`accent-foreground`, `accent-hover`, `accent-active`,
+`border-strong`, `pressed`) inside `.dark`. **The formulas are unchanged** — the house rule that
+they may not be replaced by hexes is untouched; only the level they are declared at moved, so they
+re-resolve wherever `.dark` lands. The two copies must stay character-identical. After the fix the
+CTA measures **6.80 / 5.17 / 4.80** rest / hover / press, which is exactly what §1 already claimed
+for dark mode and had no way to verify in a scope. **This belongs upstream in `modryn-base`**:
+every project built from it carries the bug latent until a screen scopes a theme.
+
+*The sink measures at the document level, where this bug does not exist.* It is not a gap in the
+page, it is a gap in what a token-pair page can be.
+
+**2. Ink on a photograph is not a token pair.** The sink measures `text on bg`. `/login` sets the
+wordmark and claim on an aerial. At the first scrim value (`opacity-40`) the worst ground under the
+claim measured **3.01:1** on a phone. It now runs at `opacity-65`, chosen off a sweep rather than by
+eye, and measured against the real `getBoundingClientRect` text boxes composited over the actual
+`object-cover` crop:
+
+| | wordmark | claim | controls |
+|---|---|---|---|
+| phone 375x812 | 9.42 | 9.15 | 15.57 |
+| desktop 1440x900 | 8.58 | 7.63 | 13.30 |
+
+`opacity-55` also cleared 4.5 and was rejected: spec §1b puts this screen in direct sunlight, where
+the bar is the floor and not the target. The claim is large text and its formal AA bar is only 3:1;
+it is held to the body bar for the same reason.
+
+**Any screen that puts type over an image owes this measurement, and the sink will not prompt for
+it.**
+
 ---
 
 ## 3. Still open

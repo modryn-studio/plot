@@ -1,17 +1,43 @@
 'use client';
 
-/* Login — the front door.
+/* Login — the front door, rebuilt 2026-08-20 as a full-bleed splash.
 
-   Deliberately a single centred column: the site name, the site description, and one card. No
-   marketing nav and no hero slot, because a boilerplate that ships dead links and an empty media
-   frame makes every new project start by deleting things. Add that chrome when the project has
-   real links to put in it.
+   THE SHAPE: a backdrop of measured ground, the wordmark and one claim floating in the upper half,
+   and the controls low in the frame where a thumb already is. It replaces a centred card, which was
+   the right thing to ship before the product had anything to say about itself and the wrong thing
+   to keep once it did. The first screen of a tool about looking at your property should be a piece
+   of property, with the measuring already done to it.
 
-   Sign-in = Google + a 6-digit emailed code; email/password is off by design (src/lib/auth.ts).
+   WHAT THIS SCREEN OWES THE HOUSE SYSTEM, since it is the first product screen in the repo and
+   every later one will copy whatever it does:
+   - Control heights are the stated ones. `size="lg"` is 48px, not the reference's ~56, and that
+     clears spec §1b's 44px floor. The air on this screen comes from the GAPS, never from growing
+     a control past its scale.
+   - Radius is `rounded-md` (8px), the locked 4/8/12 scale. This reads squarer than the reference
+     and that is plot's brand, not a shortfall: a drafting product reads better squarer.
+   - No new tokens. Both scrim passes read `--color-bg`, which is what `bg-bg` compiles to anyway,
+     so the ground under the photograph is literally the page's own ground.
+   - `muted` stays metadata. The terms line is `text-small` ink, not muted prose.
+
+   EMAIL ONLY, FOR NOW. The Google button is COMMENTED OUT rather than deleted (Luke's call,
+   2026-08-20): `GOOGLE_CLIENT_ID` is present-but-empty in `.env.local`, so the button that used to
+   sit here rendered on a screen where it could not work. The provider stays wired and dark in
+   auth.ts. There is no "Sign up" / "Log in" pair either, and that is not a simplification of the
+   reference so much as an honest reading of what the server does: one emailed code both creates the
+   account and signs it in. Two buttons would be two doors into one room.
+
    A code, not a magic link: a link signs in whichever device OPENS it, so requesting it at the desk
    and tapping it on the phone signs the phone in and leaves the desk waiting, and Gmail's in-app
    browser fails the same way. A code is read on one device and typed into the other.
-   Google is DARK until GOOGLE_CLIENT_ID/SECRET land; the code path is live once SMTP creds do. */
+
+   THIS SCREEN IS DARK IN BOTH THEMES, via `.dark` on its own root rather than a hardcoded palette.
+   Ink over a photograph has to be light or it is not ink. Scoping the class re-points every token
+   underneath it, so the controls stay exactly the components they are everywhere else.
+
+   ITS CONSEQUENCE IS THAT THERE IS NO THEME TOGGLE HERE, and that was considered and rejected
+   rather than forgotten. A toggle on a screen that looks identical either way is a control that
+   demonstrably does nothing, which is worse than an absent one; layout.tsx already argues the same
+   point about floating corner controls. The toggle lives in the account menu, behind the door. */
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -20,11 +46,34 @@ import { site } from '@/config/site';
 import { analytics } from '@/lib/analytics';
 import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { CodeInput } from '@/components/ui/code-input';
 import { TextField } from '@/components/ui/text-field';
 
-type Busy = 'google' | 'sending' | 'verifying' | null;
+type Busy = 'sending' | 'verifying' | null;
+
+/* THE BACKDROP, AND WHY IT IS TWO FILES RATHER THAN ONE RESIZED.
+ *
+ * A phone is 9:16 and a laptop is 16:9. `object-cover` on one image cannot serve both: a portrait
+ * frame dropped into a landscape viewport crops to its middle band, which is exactly the part this
+ * composition needs to stay empty, and the parcel that was carefully placed in the upper third ends
+ * up off screen. So there are two compositions, picked by `<picture>` rather than by CSS, because a
+ * `<source media>` guarantees the browser fetches exactly ONE of them.
+ *
+ * EITHER CAN BE `null`, AND null IS A FINISHED SCREEN RATHER THAN A PLACEHOLDER: the gradient below
+ * is the same one the photograph sits under, so dropping the files in changes the picture without
+ * changing the layout, the legibility or the scrim.
+ *
+ * THE FILES ARE GENERATED, NOT PHOTOGRAPHED, and they have to be: this screen renders BEFORE the
+ * session exists, so it is the one page a signed-out stranger is supposed to reach, which makes
+ * anything in it public by definition. A real property's imagery is database-only and session-gated
+ * for exactly that reason, so a backdrop here can only ever be scenery, never anyone's lot.
+ *
+ * `webp`, AND KEPT SMALL ON PURPOSE. This is the one image this repo ships to a phone before any
+ * session exists, on whatever connection that phone happens to have, and per spec §1b that
+ * connection is a back yard behind a house.
+ */
+const BACKDROP_PORTRAIT: string | null = '/login/backdrop-portrait.webp';
+const BACKDROP_LANDSCAPE: string | null = '/login/backdrop-landscape.webp';
 
 // Seconds the Resend button stays disabled. Matches OTP_SEND_COOLDOWN_MINUTES on the server, so a
 // legitimate resend never silently hits the server-side throttle and returns nothing.
@@ -83,13 +132,27 @@ function clearPending() {
   }
 }
 
+/* 404 GETS ITS OWN LINE BECAUSE IT HAS A SPECIFIC CAUSE WORTH NAMING: the email-otp plugin only
+ * mounts when the SMTP credentials exist, so on a deployment missing them the route is simply not
+ * there. "Try again" is the one instruction guaranteed not to help, and with Google commented out
+ * this is now the only door in the building. Everything else stays generic, because an
+ * unrecognised failure has nothing useful to say and a stack-shaped string is worse than a
+ * sentence. */
+function sendErrorMessage(status?: number): string {
+  if (status === 429) return 'Too many tries. Wait a minute, then try again.';
+  if (status === 404) {
+    return 'Email sign-in is not configured on this deployment. The mail credentials are missing.';
+  }
+  return 'We could not send that code. Please try again.';
+}
+
 export function Login() {
   /* WHERE THIS SIGN-IN IS HEADED. `?next=` is set by the app's auth gate when it turns a signed-out
      visitor away from a real URL, so signing in returns them to the page they asked for rather than
-     dropping them on the dashboard.
+     dropping them on the home screen.
      Read through `safeNext`, which is the same guard the gate writes with - the parameter is
      attacker-supplied by construction, and an unchecked one would let a link like
-     `yourapp.com/login?next=https://evil.example` hand a freshly authenticated user to somebody
+     `plot.app/login?next=https://evil.example` hand a freshly authenticated user to somebody
      else's page. See lib/next-path.ts.
      `useSearchParams` needs a Suspense boundary above it, which login/page.tsx provides explicitly. */
   const next = safeNext(useSearchParams().get('next'));
@@ -134,6 +197,11 @@ export function Login() {
     return () => clearTimeout(id);
   }, [cooldown]);
 
+  /* GOOGLE IS COMMENTED OUT, NOT DELETED (Luke, 2026-08-20). GOOGLE_CLIENT_ID is present-but-empty
+     locally, so auth.ts never mounts the provider and this handler had nothing to call. Restoring
+     it is this block plus the button below plus the mark at the bottom of the file, and nothing
+     else.
+
   async function withGoogle() {
     // Intent, not success. `signup_completed` is recorded server-side in auth.ts, where it
     // cannot be spoofed or lost to an ad blocker; the gap between the two is the drop-off.
@@ -155,6 +223,8 @@ export function Login() {
     }
   }
 
+  */
+
   // Used by both the first send and Resend. `resend` only changes which analytics beat fires and
   // whether we are already on the code step.
   async function sendCode(resend = false) {
@@ -175,11 +245,7 @@ export function Login() {
       // response over a screen they already left.
       if (abandonedRef.current) return;
       if (res?.error) {
-        setError(
-          res.error.status === 429
-            ? 'Too many tries. Wait a minute, then try again.'
-            : 'We could not send that code. Please try again.'
-        );
+        setError(sendErrorMessage(res.error.status));
         setBusy(null);
         return;
       }
@@ -238,25 +304,52 @@ export function Login() {
   }
 
   return (
-    /* ONE <main>, AND IT LIVES HERE. This used to be a wrapper div around a <main>, while
-       login/page.tsx wrapped the whole thing in a SECOND <main> - two landmarks, one nested
-       inside the other, which is invalid and gives a screen reader two "main" regions to choose
-       between. The page is now a bare Suspense boundary and this component owns the landmark.
-       The outer flex-column wrapper went with it: it existed to hold a header that was never
-       built, and min-h-dvh belongs on the thing that centres the card. */
-    <main className="flex min-h-dvh items-center justify-center px-6 py-16">
-      {/* The theme toggle is rendered once, globally, in src/app/layout.tsx. */}
-      <div className="w-full max-w-sm">
-        <h1 className="text-h1 text-center text-balance">{site.name}</h1>
-        <p className="text-body-lg text-muted mt-4 text-center text-pretty">{site.description}</p>
+    /* `dark` scopes the dark palette to this screen in both themes, see the file header. `bg-bg`
+       under it so overscroll on iOS reveals this screen's own ground rather than the app's.
 
-        {/* The chrome (raised ground, radius, lift, and NO hairline) lives in ui/card.tsx.
-              Padding is the caller's. The card frame stays mounted across states, only its
-              contents swap, so a successful send reads as "the card you just used answered you"
-              rather than as a page reset. */}
-        <Card className="mt-8 p-6">
-          {/* One error slot, at the TOP: a Google failure originates from the button above, so a
-                message under the email form would attribute it to the wrong control. */}
+       `text-text` IS LOAD-BEARING AND IS NOT REDUNDANT WITH `dark`. Scoping the class re-points the
+       custom properties, but `color` is INHERITED: `html` already resolved `var(--color-text)` to
+       the LIGHT value in the base layer, and every descendant inherits that computed colour rather
+       than re-reading the variable. Without this the palette flips underneath text that stays
+       near-black, and the wordmark and claim render at roughly 1.1:1 against their own ground:
+       present in the DOM, invisible on the screen, lint-clean and type-clean. Naming the colour
+       here forces one re-resolution against the dark tokens and everything inherits from that.
+       Any future subtree that scopes a theme needs the same pair. */
+    <div className="dark bg-bg text-text relative min-h-dvh">
+      <Backdrop />
+
+      {/* `relative` to sit above the backdrop's stacking context without a z-index: both are
+          positioned and this one comes second, which is the whole rule. */}
+      <main className="relative flex min-h-dvh flex-col px-6 pt-16 pb-10 md:pb-16">
+        {/* THE HERO TAKES THE SLACK. `flex-1` means it absorbs whatever height is left after the
+            controls, so the lockup sits at the optical centre of a tall phone and the form stays
+            pinned to the thumb on a short one, with no breakpoint deciding between them. */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 py-8">
+          {/* THE WORDMARK IS THE SANS AND THE CLAIM IS THE SERIF, which is each face doing its own
+              job rather than a style choice: the interface is Inter and the serif is reserved for
+              headings (layout.tsx). Set small, uppercase and widely tracked, so the identity reads
+              as a mark rather than as a sentence competing with the one below it.
+              `tracking-widest` is Tailwind's own scale step, not an invented token: plot clears no
+              namespaces, so the stock tracking utilities are live and a wordmark does not earn a
+              token of its own until a second screen needs one. */}
+          <p className="text-body font-medium tracking-widest uppercase">{site.name}</p>
+
+          {/* THE CLAIM IS THE <h1>, NOT THE WORDMARK. The document is already titled "Plot" by the
+              layout's metadata, so the page's one heading should be what the page is ABOUT. It is
+              also set larger than the mark above it, which is the reference's best move: the
+              message outranks the identity on the only screen a stranger ever sees.
+              `text-balance` so the wrap is even rather than leaving one orphaned word. */}
+          <h1 className="text-h1 md:text-display max-w-md text-center text-balance">
+            Know your property before you build on it
+          </h1>
+        </div>
+
+        {/* The controls, low in the frame. `max-w-sm` so the column never stretches to a tablet's
+            full width, and centred within whatever is left. */}
+        <div className="mx-auto w-full max-w-sm">
+          {/* ONE ERROR SLOT, DIRECTLY ABOVE THE CONTROLS THAT PRODUCE IT. It used to sit at the top
+              of a card because a Google failure originated above the form; with one path left, the
+              message belongs next to the thing that failed. */}
           {error && <p className="text-small text-danger mb-4 text-center">{error}</p>}
 
           {step === 'code' ? (
@@ -286,6 +379,11 @@ export function Login() {
             />
           ) : (
             <>
+              {/* GOOGLE, COMMENTED OUT RATHER THAN DELETED. Restoring it means uncommenting this,
+                  the handler above and the mark at the bottom of the file, and deciding what
+                  separates it from the email form: the reference uses an "OR" between rules, and
+                  `rule` measures 1.19 on elevated, which would be invisible here.
+
               <Button
                 onClick={withGoogle}
                 loading={busy === 'google'}
@@ -298,11 +396,7 @@ export function Login() {
                 Continue with Google
               </Button>
 
-              {/* A bare word, no rules. The rules were added on the general principle that a
-                    separator needs a line, and they are right on a flat page; inside a card that now
-                    lifts off the ground with its own edge and shadow, a second horizontal line is
-                    chrome competing with the frame. Luke's call, matching run-trading. */}
-              <div className="text-caption text-muted my-4 text-center uppercase">or</div>
+              */}
 
               <form
                 onSubmit={(e) => {
@@ -311,9 +405,10 @@ export function Login() {
                 }}
                 className="flex flex-col gap-3"
               >
-                {/* TextField, not a bare Input with an aria-label: this screen used to render
-                      zero <label> elements. labelHidden because the card is unambiguous and a
-                      visible label would be the only one on the screen. */}
+                {/* TextField, not a bare Input with an aria-label: this screen used to render zero
+                    <label> elements. `labelHidden` because the placeholder and the button under it
+                    leave nothing ambiguous, and a visible label would be the only one on a screen
+                    that is otherwise a photograph. */}
                 <TextField
                   label="Email address"
                   labelHidden
@@ -340,20 +435,116 @@ export function Login() {
                 </Button>
               </form>
 
-              {/* PROJECT TODO: these two need real pages before this is public. */}
-              <p className="text-caption text-muted mt-6 text-center">
+              {/* PROJECT TODO: these two need real pages before this is public.
+                  `text-small` ink rather than `muted`: this is prose the reader is being asked to
+                  agree to, and muted is reserved for metadata. */}
+              <p className="text-small mt-6 text-center">
                 By continuing you agree to our Terms and Privacy Policy.
               </p>
             </>
           )}
-        </Card>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* THE GROUND UNDER THE SCREEN, in three layers, and every colour in it is a token.
+ *
+ * 1. `bg-bg`, so this is a finished screen with no photograph at all.
+ * 2. the photograph, if there is one.
+ * 3. a scrim, which is what makes ink legal over an image whose contents nobody controls.
+ *
+ * THE SCRIM IS TWO PASSES, NOT ONE, AND EACH HAS ITS OWN JOB. Pass one is a flat dim, and it is
+ * what makes the wordmark and the claim legal over open ground. Pass two is a vertical fade to the
+ * page ground, and it is what makes the controls legal: the bottom of this screen is not a darkened
+ * photograph, it is the app's own background, which the photograph dissolves into. One pass cannot
+ * do both, because the amount of darkness a 16px placeholder needs would leave nothing of the
+ * picture anywhere else.
+ *
+ * BOTH PASSES ARE `--color-bg` RATHER THAN A FRESH BLACK, so this adds no token to the system. The
+ * screen is `.dark`-scoped, so that resolves to #12110f here, and a second opinion about what
+ * "darkened" means would drift from the page ground the moment either changed.
+ *
+ * THE FADE IS AN INLINE `linear-gradient`, deliberately. Tailwind's gradient utilities take their
+ * stops from the `--color-*` namespace and there is no `transparent` token to resolve, so
+ * `from-transparent` compiles to nothing. Reaching for the CSS variable directly is not an escape
+ * from the token system, it IS the token: `var(--color-bg)` is the same value `bg-bg` compiles to.
+ *
+ * THE STOPS DIFFER BY ORIENTATION because the compositions do. On a phone the hero sits high and
+ * the controls sit low, so the fade can start near the middle. On a laptop there is far less
+ * vertical room below the lockup, so the fade starts later and finishes harder or the controls end
+ * up sitting on picture rather than on ground.
+ */
+function Backdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="bg-bg absolute inset-0" />
+
+      {/* <picture>, NOT A CSS background-image, and not two divs toggled by a breakpoint. A
+          `<source media>` guarantees the browser resolves exactly ONE candidate and fetches only
+          that file. Toggling two background divs with `md:hidden` relies on browsers skipping the
+          fetch for a display:none element, which is true in practice and is not a guarantee, and
+          this is the one image that loads before any session exists.
+          A plain <img> rather than next/image: the optimizer cannot compose with <picture> art
+          direction, and these are pre-sized, pre-encoded static assets with nothing left for it to
+          do. (`no-img-element` is not enabled in this repo's config, so there is no rule to
+          silence here. If a future Next config turns it on, this comment is the justification.) */}
+      {(BACKDROP_PORTRAIT || BACKDROP_LANDSCAPE) && (
+        <picture>
+          {BACKDROP_LANDSCAPE && (
+            <source media="(min-aspect-ratio: 1/1)" srcSet={BACKDROP_LANDSCAPE} />
+          )}
+          <img
+            src={BACKDROP_PORTRAIT ?? BACKDROP_LANDSCAPE ?? ''}
+            alt=""
+            // The largest thing on the screen and the first paint. Nothing above it competes.
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
+      )}
+
+      {/* PASS ONE: THE OVERALL DIM, CARRYING THE HERO. AND 65% IS MEASURED, NOT PICKED.
+          This shipped at `opacity-40` for about an hour, which looked right and was not: composited
+          against the real crop, the worst ground under the CLAIM measured 3.01:1 on a 375x812 phone
+          and under the WORDMARK 4.32:1, both under the 4.5 bar. /kitchen-sink cannot see this,
+          because it measures token against token and this is ink on a photograph.
+          The sweep, worst-case pixel in each band, phone / desktop:
+            40%  wordmark 4.32 / 4.52   claim 3.01 / 3.90
+            55%  wordmark 6.12 / 6.34   claim 4.56 / 5.63   <- clears the bar with no margin
+            65%  wordmark 7.77 / 7.99   claim 6.14 / 7.28   <- shipped
+          55 clears 4.5 and was still rejected: spec §1b says this screen is read in direct
+          sunlight, where a ratio that passes at a desk is a grey rectangle at noon, so the bar is
+          the floor and not the target. The claim is large text and its formal AA bar is only 3:1;
+          it is held to the body bar anyway for the same reason.
+          65 rather than 62 because Tailwind's opacity scale steps in fives and an arbitrary value
+          here would be a one-off number in a component, which is the thing the design system's
+          lint rules exist to stop. The extra 3% costs nothing visible. */}
+      <div className="bg-bg absolute inset-0 opacity-65" />
+
+      {/* Pass two: the ground under the controls. Transparent through the hero, fully the page's
+          own background by the time it reaches the form. */}
+      <div
+        className="absolute inset-0 md:hidden"
+        style={{
+          backgroundImage:
+            'linear-gradient(to bottom, transparent 38%, var(--color-bg) 82%, var(--color-bg) 100%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 max-md:hidden"
+        style={{
+          backgroundImage:
+            'linear-gradient(to bottom, transparent 45%, var(--color-bg) 90%, var(--color-bg) 100%)',
+        }}
+      />
+    </div>
   );
 }
 
 // Step 2: enter the mailed code. Deliberately text-h3, not a second masthead: a transactional step
-// should not carry the same weight as the brand claim above it.
+// should not carry the same weight as the claim it replaced.
 //
 // No "Verify" button. The code is a fixed six digits, so the sixth keystroke is unambiguous intent
 // and submitting for the user removes a step that exists only to be clicked. The button reappears
@@ -384,7 +575,7 @@ function CodePanel({
   return (
     <div className="text-center">
       <p className="text-h3">Check your email</p>
-      <p className="text-body text-muted mt-2">
+      <p className="text-body mt-2">
         We sent a 6-digit code to {email}. It expires in 15 minutes.
       </p>
 
@@ -408,13 +599,13 @@ function CodePanel({
         </Button>
       )}
 
-      <div className="text-small text-muted mt-6 flex flex-col gap-2">
+      <div className="text-small mt-6 flex flex-col gap-2">
         {/* Disabled-with-a-countdown rather than hidden: a missing button reads as "there is no way
             to get another one", which is the moment people give up and leave. */}
         <button
           onClick={onResend}
           disabled={cooldown > 0 || sending || verifying}
-          className="hover:text-text font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
+          className="hover:text-accent font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
         >
           {cooldown > 0
             ? `Send a new code in ${cooldown}s`
@@ -425,7 +616,7 @@ function CodePanel({
         <button
           onClick={onBack}
           disabled={verifying}
-          className="hover:text-text font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:opacity-60"
+          className="hover:text-accent font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           Use a different email
         </button>
@@ -434,8 +625,10 @@ function CodePanel({
   );
 }
 
-// Google's brand mark. Its four colors are fixed by Google's sign-in branding guidelines, so this
-// is a deliberate exception to the palette (same call every reference login makes).
+/* Google's brand mark. Its four colors are fixed by Google's sign-in branding guidelines, so this
+   is a deliberate exception to the palette (same call every reference login makes).
+   COMMENTED OUT with its button, see the handler above.
+
 function GoogleMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden className="shrink-0">
@@ -458,3 +651,5 @@ function GoogleMark() {
     </svg>
   );
 }
+
+*/

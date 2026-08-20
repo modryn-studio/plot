@@ -340,12 +340,45 @@
      apart and restores the margin: rest 6.80, hover 5.17, press 4.80, with the press still a ~7%
      step off hover. Recomputed, not estimated. */
   --color-accent: #79aedd;
-  /* No --color-accent-foreground, --color-accent-hover, --color-border-strong or --color-pressed
-     here on purpose: each is derived from --color-accent / --color-elevated / --color-bg above, all
-     of which this block redefines, so every one re-derives itself. --color-icon-press used to be
-     the one exception (see the light-mode comment on --color-pressed); it is gone, folded back into
-     --color-pressed, once IconButton gained a real border that keeps marking its edge at any
-     ground. */
+
+  /* THE DERIVED TOKENS ARE RESTATED HERE, AND THIS BLOCK USED TO SAY THEY DID NOT NEED TO BE.
+     It said: "each is derived from --color-accent / --color-elevated / --color-bg above, all of
+     which this block redefines, so every one re-derives itself." That is true ONLY while `.dark`
+     sits on <html>, and it is false the moment a single screen scopes a theme to a subtree.
+
+     WHY. `@theme` emits its declarations to `:root`. A custom property's computed value is its
+     token stream with every `var()` ALREADY SUBSTITUTED, resolved on the element the declaration
+     applies to. So `--color-accent-foreground: var(--color-elevated)` is resolved on `:root`
+     against the LIGHT elevated, and descendants inherit that finished colour rather than the
+     formula. Putting `.dark` on <html> works by coincidence of location: html IS :root, so the
+     redefinition lands on the same element that declares the derivations and they re-resolve.
+     Put `.dark` on a <div> and the inputs change while the outputs stay baked upstream.
+
+     WHAT IT COST. /login scopes `.dark` to its own root (the screen is dark in both themes,
+     because ink over a photograph has to be light). Every LITERAL token flipped correctly and
+     every DERIVED one did not, so the primary CTA rendered the LIGHT `accent-foreground` (#fffefc)
+     on the DARK accent (#79aedd): measured 2.34:1, against a 4.5 bar, on the only button a
+     signed-out visitor can press. `--color-pressed` was the light page ground, so every press
+     flashed near-white. Lint-clean, type-clean, and invisible to /kitchen-sink, which measures
+     token pairs at the document level where the bug does not exist.
+
+     This is the same failure shape as the `@theme` shadow bug this repo shipped on 2026-08-17: a
+     value baked at the wrong level, wrong in one mode only, with nothing to catch it.
+
+     THESE FIVE LINES MUST STAY CHARACTER-IDENTICAL TO THEIR @theme COUNTERPARTS. They are the
+     same formulas, not new ones: the house rule that the derivations may not be replaced by hexes
+     is untouched, and changing one copy without the other is the drift that rule exists to stop.
+     For `.dark` on <html> this changes nothing at all, since both copies resolve to the same value
+     and the later one simply wins. --color-selected is already stated per mode below and needs no
+     entry here.
+     BELONGS UPSTREAM IN modryn-base: every project built from it has this bug latent, and it only
+     shows up once a screen scopes a theme. */
+  --color-accent-foreground: var(--color-elevated);
+  --color-accent-hover: color-mix(in oklab, var(--color-accent) 90%, black);
+  --color-accent-active: color-mix(in oklab, var(--color-accent-hover) 97%, black);
+  --color-border-strong: color-mix(in oklab, var(--color-border) 85%, var(--color-text));
+  --color-pressed: var(--color-bg);
+
   --color-success: #6fc887;
   --color-warning: #e8a94a;
   --color-danger: #ef8279;
@@ -364,9 +397,9 @@
      produce 1.094 - the barely-there value this token exists to replace. */
   --color-selected: color-mix(in oklab, var(--color-bg) 78%, var(--color-text));
 
-  /* The card shadow deepens on a dark ground. The derived hover/press COLOURS above need no entry
-     here: they mix off --color-accent / --color-text / --color-surface, all of which are redefined
-     in this block, so they re-derive themselves. */
+  /* The card shadow deepens on a dark ground. (The derived hover/press COLOURS are restated above
+     rather than left to re-derive: see the long note beside --color-accent-foreground for why
+     "they mix off tokens this block redefines" is only true when `.dark` is on <html>.) */
   --skeleton-sheen: #242424;
   --elevation-card: 0 2px 4px 0 rgb(0 0 0 / 0.32);
   --elevation-press: inset 0 2px 5px 0 rgb(0 0 0 / 0.45);
