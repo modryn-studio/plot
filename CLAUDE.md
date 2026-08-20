@@ -1,132 +1,165 @@
-## Starting a new project from this
+## What plot is
 
-1. Copy the folder (or `git clone` then reset history). Rename in `package.json` and `README.md`.
-2. Fill in `src/config/site.ts` — name + description feed layout metadata, emails, the login page.
-3. `cp .env.local.example .env.local` and fill it. Required, and the app will not boot without
-   them: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BETTER_AUTH_SECRET`. Also fill
-   `REPLICATE_API_TOKEN` locally — it generates media, it does not serve it, so it belongs on
-   your machine and not on the deploy.
-4. **Lock the design system before the first component.** Recolor the `@theme` tokens in
-   `src/app/globals.css`, choose a real display face and point `--font-heading` at it, then build
-   the `ui/` primitives with all five states — against `modryn-hq@v3:playbooks/design-system.md`.
-   Improvising structure per-component is why UI comes out as slop; front-load it here.
-5. **Pick this project's agents.** `.claude/agents/` is empty on purpose — the characters live in
-   `modryn-hq@v4:.claude/agents/`, and a seeded copy here would go stale invisibly in every project
-   made afterwards. Copy `craft/` always, then whichever domain the product is actually about
-   (`trading` · `music` · `exterior` · `labs` · `interface` · `media`). Copy nothing else: an agent
-   with no domain to work on is a seat nobody sits in. **Do this before the first slice**, not
-   after — one that arrives late has to reverse engineer decisions it should have been present for.
-   See `.claude/agents/README.md` for the commands.
-6. `npm install`, then `npx drizzle-kit generate` + `migrate` (see the migration rule below).
-7. `npm run dev`.
-8. Rewrite this file for the project.
+A measured model of a homeowner's property, and what it lets them build.
 
-**Strip what you don't need.** Nothing here is load-bearing on anything else, so delete freely:
-`src/app/admin/` + `require-admin.ts` (no admin surface) · `analytics.ts` + `track.ts` +
-`/api/track` + `analytics_event` (no funnel) · `waitlistSignup` (no waitlist) · `lib/ai.ts` + the
-AI SDK deps (not an AI product) · any `.claude/agents/` character whose lane this product does not
-have. Deleting is cheaper than carrying a half-wired subsystem.
+They type their address; the app pulls their parcel boundary, house footprint and a scaled aerial
+from public records, then derives hardiness zone, slope, aspect and a modelled monthly sun map.
+They confirm it. They photograph the corner of the yard they are thinking about, draw a rough
+shape on the photo, say what they want it to look like, and it renders that into their actual
+picture. When they like it, they flip to the overhead plan and give the shape a real size, which
+produces a shopping list with waste already in it and a build guide with tools, steps and the
+checks between them. When they finish, it stays on the property, so next year starts from what is
+already built.
 
-**What is deliberately NOT here**, because it is a per-product decision rather than a default:
-anonymous sessions (see the note at the top of `src/lib/auth.ts`), an app shell, a component
-library beyond the five primitives, and a worker process. Add them when a build asks for them.
+**The two-surface rule is the core architectural decision.** The photo carries the *look*, the
+plan carries the *size*, and they are the same project. A phone photo has no scale, so no quantity
+can ever come from it; an overhead plan has real geometry but sells nobody on anything. Every
+competitor picked one and lost the other.
+
+**Used outdoors, on a phone, in sunlight, with dirty hands.** That is not colour on the brief, it
+is the constraint behind the contrast floors, the target sizes and the press feedback.
 
 ---
 
-## Operating Rules
+## Where this is, right now
 
-- **This file is owned like code. Keep it under ~200 lines.** If a rule stops being true, change it
-  in the same commit as the code that made it false.
+**Blueprint phases 1 and 2 are closed. Phase 3 (design system) is open again by choice. There is
+no product code at all** — no property, no project, no takeoff, not a single product route or
+table. Everything in `src/` is boilerplate plus the rack.
+
+| Phase | State |
+|---|---|
+| 1 Discovery | passed — `docs/problem-brief.md` |
+| 2 Definition | passed — `docs/spec.md` |
+| 3 Design system | **re-opened 2026-08-20**, see below |
+| 4 Architecture | not started |
+
+### The design system was reset on 2026-08-20, and this is the one thing to read first
+
+An earlier pass (2026-08-17) built a bespoke token set and a single-file kitchen sink from
+`modryn-hq@v4:playbooks/templates/design-system.md`. **`playbooks/design-rules.md` did not exist
+yet.** It does now, and that pass violated it in several ways that all fail silently: shadows
+declared directly in `@theme` (so every dark-mode shadow rendered its light value), a resting drop
+shadow stacked under a border on the secondary button, `Card` inverted to border-without-shadow,
+`rounded-sm` on form controls, and `--color-accent` deleted outright rather than recoloured.
+
+So the whole design layer was replaced with `modryn-base`'s current one — `globals.css`,
+`components/ui/`, `components/shell/`, `app/kitchen-sink/`, `layout.tsx`, `eslint.config.mjs`.
+**Plot is now on the house system, unrecoloured.**
+
+**The next design task is to re-lock it deliberately**, against `design-rules.md` §"What a new
+project CHANGES, and what it must NOT" — the colour role VALUES, `--font-heading`, and the radius
+scale, and nothing else. The previous pass's *thinking* is still good and is recorded in
+`docs/design-system.md`; its *implementation* is gone. Re-derive from the rules, do not paste the
+old values back.
+
+The eight product-specific components from that pass (`CallOut`, `FactRow`, `QuantityRow`,
+`StepCard`, `PromptBar`, `ToolRail`/`ScaleBar`/`DimensionReadout`, `ViewTabs`, `NarratedProgress`)
+were deleted with it. They were built ahead of any screen that needed them, on mechanics the house
+rules ban. **Recoverable at commit `049cc4c` if the reasoning is wanted** — rebuild them against
+the new system when a real screen asks, one sink section per primitive, same commit.
 
 ---
 
-## Scar Tissue — things that cost real time to learn
+## The docs are the source of truth, not this file
 
-These are not style preferences. Each one is a bug that shipped or a session that got burned.
+| | |
+|---|---|
+| `docs/problem-brief.md` | Phase 1 — who this is for and why it cannot be cloned |
+| `docs/spec.md` | Phase 2 — **what v1 is.** Point agents here, not at your memory of it |
+| `docs/walkthrough.md` | The same spec as a story, for picturing the flow |
+| `docs/design-system.md` | Phase 3 — **partly superseded**, see the reset note above |
+| `docs/recon.md` | The competitive read, and why the category fails |
+| `docs/reference/` | Per-product teardowns from live drives |
 
-- **DB scripts need BOTH flags.** `tsx --env-file=.env.local --conditions=react-server`. The first
-  loads `DATABASE_URL`; the second gets past the `server-only` guard in `lib/env.ts`. Missing either
-  fails in a way that does not name the cause.
-- **Migrations: `drizzle-kit generate` + `migrate`, NEVER `push`.** `push` records nothing, and one
-  push makes `migrate` skip older migrations forever, silently, exit 0. There is no warning and no
-  easy repair.
-- **A `'use client'` file may import TYPES from a db-backed module, never VALUES.** Those modules
-  reach `@/lib/db` → `@/lib/env` → `server-only`, so one label map or constant pulled into a client
-  file ships the secret schema to the browser and fails the build. `import type` is erased and always
-  safe. This bit three times in one week — the fix is a leaf module with no db behind it, or keeping
-  the constant in the component.
-- **Every export of a `'use client'` module becomes a client reference** when a Server Component
-  imports it, so a plain string arrives as an opaque object and `clsx` drops it — silently, no error,
-  no type complaint. Shared constants live in a plain module with no `'use client'` at its top, and
-  re-exporting them from the client file does NOT launder them.
-- **In dev, `baseURL` resolves per request from the `Host` header — it is not pinned to one port.**
-  A pinned `BETTER_AUTH_URL` breaks the moment a second dev server or worktree takes the next port,
-  and it breaks in a way that costs the most time: every browser POST 403s with `Invalid origin`
-  before the throttle hook and before any mail, the login screen reports a generic send failure, and
-  retrying can never work. `src/lib/auth.ts` uses Better Auth's
-  `baseURL: { allowedHosts: [...], protocol: 'http' }` in dev — its own multi-host feature, not a
-  workaround — so sign-in works on whatever port Next actually bound to. An earlier fix only widened
-  `trustedOrigins`, which passed the origin check but still built OAuth callbacks from :3000.
-  Production keeps a pinned string; a wildcard host allowlist in production is an open redirect.
-  **Still invisible to curl either way:** the origin check only runs on requests carrying a Cookie
-  header, so a bare probe sails through to a different error. Reproduce auth bugs in a browser or
-  not at all.
-- **Next.js 16 is not the Next.js in your training data.** Read the version-matched docs in
-  `node_modules/next/dist/docs/` before writing framework code. `next dev` maintains that pointer in
-  `AGENTS.md` — that file exists solely so Next writes its managed block there instead of into this one.
-- **TypeScript stays on 6.** 7.0 ships no programmatic API, so typescript-eslint throws on import and
-  takes `npm run lint` down with it. Measured on a real repo the native compiler was ~9% faster, not
-  10x, because the check is I/O-bound. Revisit when typescript-eslint actually supports it.
-- **Tailwind v4 has no config file.** `@theme` tokens in `src/app/globals.css` — never `:root`, never
-  `tailwind.config.*`.
-- **One icon set, one size per context.** Icons come from `lucide-react`. **Never inline an `<svg>`
-  in a component**, and never generate a UI icon. Stroke weights drifted 50% across a codebase before
-  this rule existed. (The two `<svg>`s that remain — the Google mark and the spinner — are brand and
-  motion, not UI icons.)
-- **API routes use `createRouteLogger`** from `@/lib/route-logger` — never raw `console.log`.
-- **Env vars go in `src/lib/env.ts`** (zod, fail-fast) or they fail at request time instead of boot.
-- **An emailed code, not a magic link.** A link signs in whichever device OPENS it, so requesting it
-  at the desk and tapping it on the phone signs the phone in and leaves the desk waiting. Gmail's
-  in-app browser fails the same way.
-- **The OTP send throttle lives in the `before` hook, not in `sendVerificationOTP`.** By the time the
-  send hook runs, the plugin has already rotated the stored code — throttling there kills the code
-  the user is holding and sends no replacement. Silent lockout. See `src/lib/auth.ts`.
-- **`?next=` is attacker-supplied by construction.** Always read it through `safeNext`
-  (`lib/next-path.ts`). `startsWith('/')` is NOT enough — `//evil.example` and `/\evil.example` are
-  protocol-relative and leave the origin while reading as a path.
-- **No em dashes in user-facing copy** (headlines, subtitles, button labels, any UI text). Comma,
-  colon, parentheses, or a plain hyphen. Code comments and docs are exempt.
-- **The app never names itself to the person using it.** "Every file stays in Acme" is the app
-  describing someone else. Use *you / your*, or first-person *we*, or nothing. Marketing surfaces are
-  the exception — a FAQ answering "What is Acme?" has to name it.
+**Seven decisions in `docs/spec.md` §6 are still open**, two of which block the first slice:
+geography at launch (the parcel DB is Wisconsin-only), and whether signup gates the base plan.
+
+---
+
+## Data sources — settled, and proven in another repo
+
+| What | Source | Notes |
+|---|---|---|
+| Parcel boundary | WI Statewide Parcel DB (ArcGIS) | Free, no key, 72 counties. **Wisconsin only** — returns nothing outside rather than guessing a line you would measure off. |
+| Aerial imagery | Google Static Maps satellite | z18–21, north-up Web Mercator, metres-per-pixel computed in closed form. |
+| Sun | Google Solar API `monthlyFlux` | 12 bands, 0.5 m grid. **Modelled**, never presented as measured. |
+| Slope + aspect | USGS 3DEP ImageServer | 1 m, no key, national. |
+| Soil | USDA-NRCS Soil Data Access | Free, keyless, national. |
+| Hardiness zone | USDA PHZM | Free, keyless. |
+| Image generation | Replicate | Standing studio rule: check Replicate before adding any image provider. |
+
+**`modryn-builds/yard` already implements the first six** — `src/lib/{parcel,site-imagery,solar,
+soil,climate,geo}.ts`, about 900 lines, plus a tenancy-scoped `property-store.ts` reviewed and
+found sound on 2026-08-20. **Read it before reimplementing any of this.** Yard is a separate
+product and is not being merged in; it is prior art and a parts bin.
+
+---
+
+## Scar Tissue — the rules
+
+Carried from `modryn-base` deliberately: this file is loaded into every session and a referenced
+doc is not, so a rule that lives only in a playbook is a rule nobody enforces. The evidence behind
+each lives in `modryn-hq@v4:playbooks/scar-tissue.md`.
+
+**Stack**
+- **DB scripts need BOTH flags:** `tsx --env-file=.env.local --conditions=react-server`.
+- **Migrations: `drizzle-kit generate` + `migrate`, NEVER `push`.** One push makes `migrate` skip older migrations forever, silently.
+- **A `'use client'` file may import TYPES from a db-backed module, never VALUES.** `import type` is erased and always safe.
+- **Every export of a `'use client'` module becomes a client reference.** Shared constants live in a plain module; re-exporting does not launder them.
+- **No pinned `BETTER_AUTH_URL` in dev** — `baseURL` resolves per request from `Host`.
+- **Next.js 16 is not the Next.js in your training data.** Read `node_modules/next/dist/docs/` before writing framework code. `middleware.ts` is `proxy.ts` now, and the old name loads while warning.
+- **TypeScript stays on 6**; 7.0 breaks typescript-eslint and takes `npm run lint` down.
+- **Tailwind v4 has no config file.** `@theme` in `src/app/globals.css`, never `:root`, never `tailwind.config.*`.
+- **API routes use `createRouteLogger`**; env vars go in `src/lib/env.ts` (zod, fail-fast).
+- **An emailed code, not a magic link.**
+- **`?next=` is attacker-supplied.** Always read it through `safeNext`; `startsWith('/')` is NOT enough.
+- **NO `loading.tsx` AT THE APP ROOT.** Past ~50KB of streamed payload its boundary stops hydrating, silently.
+
+**Design system** — the full set lives in `modryn-hq@v4:playbooks/design-rules.md`. **Read it
+before touching a token, a primitive or the shell.** The ones that bite hardest:
+
+- **A `@theme` shadow value must stay INDIRECT** (`--shadow-card: var(--elevation-card)`). Tailwind resolves a directly-declared `@theme` shadow at build time and bakes it into the utility, so the `.dark` override does nothing and every shadow renders its light value. **This repo shipped that bug on 2026-08-17.**
+- **A control gets a border OR a drop shadow, never both**, and only `Card`, modals and popovers may cast a drop shadow at all. Every button-class control presses with the `shadow-press` INSET.
+- **Muted is METADATA; ink is PROSE. Two tiers, never three.** `muted on surface` is 4.40:1 here, so muted prose on a card already fails AA. Hierarchy below body drops through size and weight.
+- **Shape follows the control's CONTENT.** Icon-only is a circle; every labelled control shares one radius, fields included.
+- **Three easing curves, each with a job, and `ease-in` is BANNED.**
+- **The kitchen sink holds no literal values**, and **a new primitive means a new sink section in the SAME commit.**
+- **Some measured failures on `/kitchen-sink` are deliberate and recorded** — `muted on surface` at 4.40, `border-strong` below 3:1, `rule` not held to the non-text bar. The page shows them so nobody "fixes" a decision. Check `design-rules.md` before changing one.
+
+**House style**
+- **No em dashes in user-facing copy.** Comments and docs are exempt; lint enforces the rest.
+- **The app never names itself to the person using it.** Use *you / your*, first-person *we*, or nothing.
 
 ---
 
 ## Stack
 
 Next.js 16.3 (App Router) · React 19 (React Compiler on) · TypeScript 6 · Tailwind v4 ·
-Vercel AI SDK v7 · Neon + Drizzle · Better Auth (emailed code + Google) · nodemailer (Gmail SMTP) ·
+Vercel AI SDK v7 · Neon + Drizzle · Better Auth (emailed code + Google) · nodemailer ·
 Vercel Analytics · lucide-react.
 
 ```
-src/app/            App Router pages, layouts, route handlers (admin/, api/auth/, api/track/, login/)
-src/components/ui/  five primitives — button, input, textarea, theme-toggle, code-input (+ spinner)
-src/components/views/auth/  the login screen
-src/config/site.ts  name + description; single source of truth
-src/lib/            auth · db · env · route-logger · notify · track · analytics · cn · next-path · ai
-scripts/            email-preview (renders the mail templates), load-env, funnel.sql
+src/app/               admin/, api/auth/, api/track/, login/ — all boilerplate
+src/app/kitchen-sink/  every token + component in every state; measures contrast and type
+src/components/ui/     primitives — button, icon-button, text-field, theme-toggle, code-input,
+                       tooltip, skeleton, empty-state, card, spinner, icon (LucideProvider)
+src/components/shell/  account-menu — the theme toggle lives here, not floating in a corner
+src/config/site.ts     name + description; single source of truth
+src/lib/               auth · db · env · route-logger · notify · track · analytics · cn · next-path · ai
+docs/                  the blueprint artifacts; the real source of truth for what to build
 ```
+
+**Nothing under `src/` is product code yet.** The first thing built should be phase 4's data model,
+not a screen.
 
 ## Conventions
 
 - **Code style:** senior-engineer minimalism — small surface, obvious naming, no premature
   abstraction, comments explain WHY, early returns for errors. One file, one responsibility.
-- **Both modes, always.** Light + dark with a persisting toggle ship out of the box —
-  `ThemeProvider` + `ThemeToggle` are wired into the root layout (no `next-themes`; it's unmaintained
-  with open React 19/Next 16 bugs). Recolor the `.dark` block in `globals.css` per brand.
+- **Both modes, always.** Recolor the `.dark` block in `globals.css` per brand.
+- **`src/app/layout.tsx` sets `robots: { index: false }`.** Remove it when this genuinely goes
+  public, not before. Delete `src/app/kitchen-sink/` (or gate it behind `require-admin`) at the
+  same time — nothing imports it, so the directory is the whole deletion.
 - **Adding an analytics event = three changes in ONE commit:** `src/lib/analytics.ts`,
-  `ALLOWED_EVENTS` in `src/app/api/track/route.ts`, and a query in `scripts/funnel.sql`. An event
-  tracked but never queried is noise; a funnel query with no event behind it is a lie.
-- **`src/app/layout.tsx` sets `robots: { index: false }`.** Remove it when the project genuinely
-  goes public — not before.
-- **Generative UI** (AI SDK v7 `streamText` + tools + `message.parts`): `modryn-hq@v3:playbooks/generative-ui.md`.
+  `ALLOWED_EVENTS` in `src/app/api/track/route.ts`, and a query in `scripts/funnel.sql`.

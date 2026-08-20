@@ -1,173 +1,345 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* plot design tokens — ONE shape language, two densities. See docs/design-system.md.
-   Rewritten 2026-08-17 after Rams' review, which found that declaring "canvas mode" and "document
-   mode" as two SYSTEMS licensed four separate drifts (radius, shadow, ink, and an unexamined
-   accent). Recraft governs how a canvas is arranged and the field guides govern how a page of
-   facts is arranged; NEITHER rules on shape, depth, ink or motion. Those are set once, here.
+/* Modryn design tokens — the whole system, not just colors. Recolor + choose a real
+   display font per project BEFORE building components (that's the anti-slop lever;
+   see modryn-hq@v4:playbooks/templates/design-system.md). Then open /kitchen-sink and check
+   the result: it measures contrast and renders every step of the scale, which is the half of
+   the design system that lint cannot see.
 
-   Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-bg, text-muted, text-h1,
-   rounded-md are generated. Never add a tailwind.config file. Color roles are plain (non-inline)
-   @theme values — that's what makes them real, overridable custom properties so .dark below can
-   swap them at runtime.
-
-   eslint's tailwindcss/no-custom-classname reads THIS FILE for the legal class list, so adding a
-   token here is the only way to make a class legal. Note the known gap: it enforces that a class
-   EXISTS, not that it is ours — `text-sm` and `px-5` are legal Tailwind and slipped through. */
+   ┌─ WHAT A NEW PROJECT CHANGES, AND WHAT IT MUST NOT ─────────────────────────────────────┐
+   │ CHANGE (this is the project's identity):                                               │
+   │   · the colour role VALUES below and their .dark counterparts                          │
+   │   · --color-rule and --color-selected (both modes)                                     │
+   │   · --font-heading                                                                     │
+   │   · the radius scale, if the brand is sharper or softer                                │
+   │                                                                                        │
+   │ DO NOT CHANGE (house style — every one is load-bearing and fails SILENTLY):            │
+   │   · the DERIVED tokens (accent-hover / accent-active / border-strong / pressed).       │
+   │     They are color-mix() formulas so a recolour carries them. Replace one with a hex   │
+   │     and it stops following the accent, in one mode first.                              │
+   │   · the elevation indirection (--shadow-x: var(--elevation-x)) and its :root/.dark      │
+   │     ordering. Inlining the real value breaks dark mode with no error at all.           │
+   │   · @layer base: the global focus outline, reduced-motion scoping, scrollbar defaults  │
+   │   · the hand-written utilities at the bottom of this file                              │
+   │                                                                                        │
+   │ HOW TO CHECK YOU DID NOT BREAK ONE: recolour, then read /kitchen-sink. It measures     │
+   │ every contrast pair in both modes and every type step's declared-vs-rendered size.     │
+   │ Full reasoning per rule: modryn-hq@v4:playbooks/design-rules.md                        │
+   └────────────────────────────────────────────────────────────────────────────────────────┘
+   Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-surface,
+   text-muted, text-h1, rounded-md are generated. Never add a tailwind.config file.
+   Color roles are plain (non-inline) @theme values — that's what makes them real,
+   overridable custom properties so .dark below can swap them at runtime. */
 @theme {
-  /* Color roles — light defaults; .dark overrides below.
+  /* Color roles — light defaults; .dark overrides below */
+  --color-bg: #fafafa; /* page background */
+  --color-surface: #f4f4f5; /* panels, cards */
+  --color-elevated: #ffffff; /* raised cards, popovers, modals */
+  --color-border: #e4e4e7; /* subtle borders, dividers */
+  --color-text: #18181b; /* body text */
+  --color-muted: #71717a; /* secondary text, placeholders */
+  /* THE ACCENT IS NOT THE SAME VALUE IN BOTH MODES, and it cannot be. A hue dark enough to carry a
+     light label on paper is too dark to read on ink, so this is one step darker than the old
+     placeholder and .dark below is a step lighter. Measured: the old #3b82f6 put white at 3.68:1,
+     under AA, which is why contrast-color() was picking BLACK for the label and the primary CTA
+     read as black-on-blue. TODO: replace with intent, never violet. */
+  --color-accent: #2563eb; /* brand / primary CTA (light) */
+  /* THE LABEL ON THE ACCENT IS THE RAISED GROUND, and it reverses by mode for free because
+     --color-elevated does. Near-white on a blue button in light, near-black in dark, which is what
+     every considered button does and what run-trading@v2 hand-writes as two hexes.
+     NOT contrast-color() any more. That returns pure black or pure white and nothing between, so
+     with the old too-light accent it correctly chose BLACK and the CTA read as black-on-blue. The
+     honest fix was a darker accent, not a smarter foreground: pick the pair, then let
+     /kitchen-sink prove the ratio. */
+  --color-accent-foreground: var(--color-elevated);
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
 
-     WARM PAPER, NOT COOL GREY. Every SaaS default ground is blue-grey; a field guide is printed
-     on paper. Color is reserved for MEANING — the photograph and the plan are the colored things
-     on screen, the interface is paper and ink. */
-  --color-bg: #faf8f5;                /* page ground */
-  --color-surface: #f2efe9;           /* panels, list rows — RECESSED, see the naming note below */
-  --color-elevated: #ffffff;          /* cards, popovers, the floating prompt bar */
-  --color-border: #e0dbd2;            /* dividers */
-  --color-border-strong: #c2bbae;     /* the hover firm-up. 1.66 on surface against border's 1.38 */
-  --color-text: #1c1a17;              /* body, AND the primary action */
-  --color-ink-hover: #2a2721;         /* the primary action's only hover move */
-  --color-muted: #6b6660;             /* metadata: dates, counts, units, labels, sources */
-  --color-pressed: #e8e3da;           /* the ground a control presses to — see the note below */
+  /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component. */
+  --text-display: 3rem;
+  --text-display--line-height: 3.25rem;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: 2.25rem;
+  --text-h1--line-height: 2.5rem;
+  --text-h1--font-weight: 700;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: 1.75rem;
+  --text-h2--line-height: 2rem;
+  --text-h2--font-weight: 600;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.75rem;
+  --text-h3--font-weight: 600;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.75rem;
+  --text-body-lg--font-weight: 400;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-body--font-weight: 400;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.25rem;
+  --text-small--font-weight: 400;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 500;
+  --text-caption--letter-spacing: 0.01em;
 
-  /* THERE IS NO ACCENT HUE, AND THAT IS THE DECISION (Luke + Rams, 2026-08-17).
-   *
-   * It used to be a spruce green, justified as "reads surveyed rather than eco". That was a claim
-   * about connotation, not a decision about a job, and this system's own standard kills it:
-   * COLOR BELONGS TO THE SUBJECT, NOT THE CHROME. Green is this subject's color — grass, shrubs,
-   * the plant palette, the aerial — so a green button over a plan whose plant symbols are green is
-   * the chrome painted in the plate's ink. `run-rebuild` reached the same verdict from the other
-   * side: "a green mark beside a green P&L is a lie no amount of contrast rescues."
-   *
-   * It also collided internally: `accent` measured 5.15 and `success` 4.34 on the worst ground —
-   * two greens a hair apart in value, carrying different meanings, meeting on the Build screen.
-   *
-   * So the primary action is INK. Peterson has no accent color; the arrow is black, and what makes
-   * it read is that it is the ONLY arrow. A filled near-black button is a stronger scan cue than a
-   * mid-value hue, and at 16.38:1 it is the most legible object on a phone in direct sun — which
-   * is where this product is used.
-   *
-   * The consequence worth protecting: success / warning / danger are now the ONLY chromatic things
-   * in the interface. That is "color reserved for meaning" actually arriving.
-   *
-   * NOT BLUE, if a hue is ever revisited: the APWA locate code makes blue mean potable water, and
-   * this product has a water-marking feature and an 811 gate. Same collision, different subject. */
+  /* Hover and press derivatives. DERIVED, never hand-picked, so recolouring the accent carries
+     them with it: a boilerplate whose accent ships as a TODO cannot afford three more hexes that
+     silently keep pointing at the old brand.
+     Mixing toward `text` moves the RIGHT DIRECTION IN BOTH MODES from a single declaration, with
+     no .dark override: text is near-black on paper and near-white on ink, so a hover darkens in
+     light and lightens in dark on its own. (run-trading hand-picks these as six hexes across two
+     mode blocks, which is the version that drifts.) */
+  /* Hover DARKENS IN BOTH MODES, so it mixes toward black rather than toward `text`. An earlier
+     version mixed toward text, which lightens on a dark ground: that is the "hover state moves the
+     wrong way in dark" bug, and run-trading@v2 avoids it by hand-picking a darker hex per mode
+     (#185545 light, #47a189 dark, both a step DOWN from their accent). Mixing toward black gets the
+     same behaviour from one declaration that survives a recolour. */
+  --color-accent-hover: color-mix(in oklab, var(--color-accent) 90%, black);
+  /* PRIMARY'S PRESS STATE, ONE STEP DARKER THAN ITS HOVER, so pressing reads as its own event
+     rather than a continuation of the hover it happened to be sitting in. Primary carries no
+     border to mark a press with, so the fill has to say it alone - a second, small colour step,
+     rather than something that would need a shared elevation token retuned for one consumer.
+     Mixed off accent-hover rather than accent directly, and capped at 97%, because a DARK-mode
+     label reads accent-foreground = elevated, which is itself DARK - darkening the fill further
+     moves the two toward each other and COSTS contrast rather than buying it. 97% was measured,
+     not guessed: at 90% the dark label dropped to 3.88, under AA; 97% holds 4.63 with real margin
+     while still landing a step distinguishable from hover (light 6.94, dark 4.63; step-vs-hover
+     ~1.07 both modes - small on purpose, this only has to read as A step, not a leap). */
+  --color-accent-active: color-mix(in oklab, var(--color-accent-hover) 97%, black);
+  /* 15%, Luke's own call rather than a match to run-trading@v2's number - "run-trading@v2's login
+     page actually doesn't have this consistent, not a problem because we are only iterating the
+     modryn-base repo" (2026-08-19). Tuned by measuring: 15% moves the border to about 1.4x the
+     rest value in both modes, a real step but a gentle one; 10% measured under 1.3x, which reads
+     as no change at all rather than "a very subtle one." The original 55% mix measured 3.94:1
+     against elevated in light, more than double the softest reference this was ever checked
+     against - a hover that read as a highlight, which is the thing this exists to stop.
+     Same formula in both modes on purpose: recolour the palette and this re-derives rather than
+     drifting the way two hand-picked hexes would. */
+  --color-border-strong: color-mix(in oklab, var(--color-border) 85%, var(--color-text));
+  /* A CONTROL WHOSE OUTLINE IS THE ONLY THING IDENTIFYING IT (ported from run-rebuild, 2026-08-20).
+     `--color-border` is 1.30:1 on `elevated`, which is correct for a control that carries a
+     placeholder or a label - something INSIDE it says "type here", so the edge can be faint at rest
+     and jump on focus, and that subtle-to-pronounced gesture is worth keeping. A CODE BOX has
+     nothing inside it. There the outline IS the control, which is the case SC 1.4.11 names, and a
+     1.30 hairline fails it outright: run-rebuild shipped this and Luke caught it on the login screen
+     ("the outline of the code boxes are hard to see").
+     THE SPLIT IS BY WHETHER ANYTHING INSIDE THE CONTROL IDENTIFIES IT, not by component type. Input
+     and Textarea keep `--color-border` for exactly that reason; only `CodeInput` takes this.
+     The value is arithmetic, not taste. 3:1 against white caps relative luminance at 0.30, which IS
+     a mid grey - a hairline on white cannot be both faint and compliant, and no lighter value
+     clears it. Solved with headroom rather than to the line, because at exactly 3.00 the hex
+     rounding lands back under in the browser.
+     Nearly the same in both modes on purpose: a line that must clear 3:1 against near-white AND
+     near-black has almost nowhere to go. Every other token here is a per-mode literal because it has
+     one direction to satisfy; this one has two. */
+  --color-field: #848280;
+  /* A PRESSED CONTROL TAKES THE PAGE'S OWN GROUND. Not a mix: run-trading@v2's --pressed-bg is
+     literally its --color-bg in both modes, and the reason is physical. A raised control sits on
+     the page; pushing it in should sink it to the level of the page, not to some third colour that
+     belongs to nothing. */
+  /* THE PICKED-OUT ROW GROUND: an active nav row AND a hovered one, deliberately the same value
+     (Luke, 2026-08-19: "i want hover to be the active fill color. simpler"). This reverses the
+     earlier rule that hover must be its own quieter ground. The tradeoff is real and named rather
+     than hidden: with the pointer in the nav, two rows carry the same fill, so for that moment the
+     ground alone does not say which one is your location. It is his call, it is simpler, and the
+     pointer itself disambiguates.
+     The step is MEASURED against run-rebuild's active row, not guessed: theirs sits 1.120 off the
+     page in light and 1.547 in dark, where this repo's old `surface` managed only 1.053 and 1.094 -
+     about half the step in light and under a third in dark, which is why it read as barely there.
+     Derived (mixing the page toward ink, which darkens in light and lightens in dark on its own),
+     but the PERCENTAGE differs per mode because the two ends of the range are not symmetric: 5%
+     lands 1.122 in light, while dark needs 22% to reach 1.567. One formula cannot serve both, and
+     a per-mode percentage is still one decision fewer than the two hand-picked hexes the reference
+     repos carry. */
+  --color-selected: color-mix(in oklab, var(--color-bg) 95%, var(--color-text));
+  /* THE ONE PRESSED GROUND, for every button-class control. IconButton used to need a second,
+     quieter one (icon-press) because it pressed via a shadow with nothing marking its edge, and a
+     shadow-only signal dropping all the way to the page in dark could vanish. That stopped being
+     true the moment IconButton gained a real border on hover (2026-08-19): the border persists
+     through the press (nothing clears it), so the edge is still marked at any ground, and the
+     second token was solving a problem that no longer exists. One value, one job. */
+  --color-pressed: var(--color-bg);
 
-  /* The three meanings. All recomputed 2026-08-17 — success and warning were BELOW AA on
-     `surface` (4.34 and 4.38) while the phase 3 gate claimed contrast had been checked. It had
-     not. These are solved with headroom rather than to the line so hex rounding cannot drop them
-     back under: 4.95 and 4.91 worst-ground. */
-  --color-success: #3a733a;           /* a gate that has been passed */
-  --color-warning: #a94c07;           /* drainage, crowding, out-of-zone */
-  --color-danger: #b3261e;            /* destructive, and hard stops like 811 */
+  /* ELEVATION. TWO VALUES, and the split is DROP vs INSET rather than a ramp of depths.
+     --shadow-card is the only DROP shadow in the system: a drop shadow says "this floats above the
+     page", which is a claim only a Card gets to make. No button-class control carries one, which is
+     what "a control gets a border OR a shadow, never both" means.
+     --shadow-press is an INSET, and an inset is the opposite statement - it says "this is pushed
+     INTO the page", which is exactly what a pressed button should say and cannot make anything
+     float. Removing it along with the drop shadows (2026-08-19) was an over-application of the
+     no-floating rule and cost every button its pressed feedback; restored the same day.
+     --shadow-sm stayed deleted: that WAS a resting drop shadow on the secondary button, stacked
+     under a border, and it is the exact combination the rule forbids.
+     Literal rather than derived: a shadow is ink in both modes, its job is to push the page back,
+     which is one direction, and anything mixed off a token that flips by mode flips with it. The
+     dark value is NOT the light one at a different opacity - card and page sit far closer in value
+     on a dark ground, so the alpha has to climb to say anything at all. */
+  /* INDIRECTION IS LOAD-BEARING - do NOT inline the real value here.
+     Tailwind RESOLVES a @theme shadow at build time and bakes it into the utility:
+     `--tw-shadow: 0 2px 4px 0 var(--tw-shadow-color, #0000001a)`. Only the COLOUR stays variable
+     (via --tw-shadow-color, which nothing sets), so the geometry AND the alpha are frozen to
+     whatever light mode said, and a .dark override of --shadow-card then does nothing at all -
+     every card would render its LIGHT shadow in dark mode. That shipped, and it is why a pressed
+     button's inset used to be nearly invisible in dark here while run-trading@v2's read clearly
+     (theirs uses shadow-[var(--shadow-x)], an arbitrary value, which dereferences at runtime).
+     Pointing the theme value at another custom property leaves Tailwind nothing to resolve, so the
+     utility emits the var reference and the .dark block below actually applies. */
+  --shadow-card: var(--elevation-card);
+  --shadow-press: var(--elevation-press);
 
-  /* NO --color-derived / --color-confirmed. Derived-vs-confirmed is still a core product concept,
-     but it resolves into the ink tiers rather than needing its own hues: DERIVED is `muted` plus
-     the word "estimated"; CONFIRMED is full `text` plus the word "measured". Pencil and ink.
-     The old --color-derived was #8a7f6a, which failed AA on every light ground (3.44 worst) — on
-     the ink that tells you a number is a guess, on the screen where it becomes a purchase.
-     The word was always the real signal; the color was duplicating it, and badly. */
+  /* Radius — default md; rounded-full only for avatars/toggles, never pill-everything */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 
-  /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component.
-     text-body-lg is the build guide's body size, and that is functional rather than decorative:
-     someone is reading it at arm's length, outdoors, with dirty hands. */
-  --text-display: 3rem;     --text-display--line-height: 3.25rem; --text-display--font-weight: 700; --text-display--letter-spacing: -0.02em;
-  --text-h1: 2.25rem;       --text-h1--line-height: 2.5rem;       --text-h1--font-weight: 700; --text-h1--letter-spacing: -0.02em;
-  --text-h2: 1.75rem;       --text-h2--line-height: 2rem;         --text-h2--font-weight: 600; --text-h2--letter-spacing: -0.01em;
-  --text-h3: 1.375rem;      --text-h3--line-height: 1.75rem;      --text-h3--font-weight: 600;
-  --text-body-lg: 1.125rem; --text-body-lg--line-height: 1.75rem; --text-body-lg--font-weight: 400;
-  --text-body: 1rem;        --text-body--line-height: 1.5rem;     --text-body--font-weight: 400;
-  --text-small: 0.875rem;   --text-small--line-height: 1.25rem;   --text-small--font-weight: 400;
-  --text-caption: 0.75rem;  --text-caption--line-height: 1rem;    --text-caption--font-weight: 500; --text-caption--letter-spacing: 0.01em;
+  /* MOTION — no spring, no bounce; durations 120-250ms.
+     THREE CURVES, EACH WITH A JOB. Not a palette to pick from by taste: an easing describes the
+     RATE a thing changes at, so choosing one is choosing what the movement means. The split is from
+     animations.dev's easing blueprint, checked against its live stylesheets rather than inferred.
 
-  /* Two faces, and the serif is the point: a field guide is a serif document and every AI SaaS is
-     not. Wired in src/app/layout.tsx via next/font. */
-  --font-heading: var(--font-source-serif), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+       ease (the CSS built-in, and the DEFAULT here)  a state change on something already in place:
+         hover and active colour, background, opacity, border. The overwhelming majority of the
+         transitions in this codebase. It is the one built-in the blueprint keeps.
+       --ease-out    something ENTERING or LEAVING, user-initiated: a menu, a tooltip, a scrim.
+         The acceleration up front is what reads as responsive.
+       --ease-in-out something ALREADY ON SCREEN that moves or changes size - a car pulling away and
+         stopping again. The sidebar collapsing is the case here.
 
-  /* RADIUS IS KEYED TO WHAT A THING IS, not to taste. A radius does one job: it tells you the
-   * boundary of a thing you can OPERATE. A rounded rectangle reads as a discrete manipulable
-   * object; a square edge reads as a region of a page.
-   *
-   * That gives the split Luke's paper instinct was reaching for — and he was right about the
-   * thing, wrong about the noun. What has square edges on paper is THE PAGE AND ITS PRINTED
-   * REGIONS: the plate, the map, the table. What does not is anything never printed on it — your
-   * hand, a tool, a control. A field guide has no buttons, so it cannot rule on button shape.
-   *
-   *   plate       0   the thing that IS the page: the photograph, the plan viewport, the aerial,
-   *                   a takeoff table, a data row's own bounds, print output.  →  rounded-none
-   *   slot       12   card, modal, sheet, selectable choice, the PromptBar as a unit
-   *   control     8   button, input, chip, IconButton, tool-rail button, menu item
-   *   badge       6   RENT / BUY, modelled, estimated, the stale mark
-   *
-   * Values are `run-rebuild`'s exactly, and identical on purpose: a 44px control here and a 36px
-   * control there are both rectangles held in a hand, so a different number would be difference
-   * for its own sake. The PLATE class is where plot genuinely differs — Run has no full-bleed
-   * photograph that IS the page.
-   *
-   * Named xs/sm/md rather than badge/control/slot because Tailwind v4 generates `rounded-*` from
-   * this namespace and a bare `--radius` generates nothing. There is deliberately no `lg`. */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
+     EASE-IN IS BANNED. It starts slow, which reads as sluggish, and it accelerates INTO the stop,
+     which is the opposite of how anything settles. The blueprint's demo is the argument: two
+     dropdowns at an identical 300ms, and the ease-in one feels markedly slower. Easing changes
+     PERCEIVED speed, not just polish, so this is a performance rule as much as a taste one. There
+     is a specimen of it on /kitchen-sink so the ban is something you can feel rather than take on
+     trust.
+     LINEAR is for constant motion only - a marquee, a progress bar, a hold-to-delete - where the
+     thing being shown IS the even passage of time.
 
-  /* DEPTH IS THE AFFORDANCE FOR A THING YOU CAN PUSH. Not elevation-as-importance, not
-   * lift-as-polish. Shadow answers exactly one question — "is this a thing I can operate?" — and
-   * on a phone at arm's length in daylight with dirty hands that is the highest-value question on
-   * the screen.
-   *
-   * This replaces "a field guide has no drop shadows", which was wrong: Peterson has no shadows
-   * because ink on paper physically cannot cast one, not because a designer judged they harm
-   * legibility. Inheriting a constraint after the constraint has stopped existing is the same
-   * error as putting electronics in a wooden cabinet.
-   *
-   * PRESS IS AN INSET, NOT A FILL FLASH OR A SCALE, and that is derived rather than borrowed: an
-   * inset's weight sits at the TOP edge — the part not under your thumb — so it survives the
-   * finger covering the control. A fill flash does not. `active:scale-[0.98]` is worse still: a
-   * shrink is not a push, the object gets smaller and stays flat. */
-  --shadow-sm: 0 1px 2px 0 rgba(28, 26, 23, 0.06);      /* a control at rest */
-  --shadow-card: 0 2px 4px 0 rgba(28, 26, 23, 0.10);    /* genuinely floating over the canvas */
-  --shadow-press: inset 0 2px 4px 0 rgba(28, 26, 23, 0.12);
+     THE CURVE IS THE DEFAULT, not a thing to hand-pick per component. Tailwind ships
+     --default-transition-* at 150ms / cubic-bezier(0.4, 0, 0.2, 1), and every bare `transition`,
+     `transition-colors`, `transition-opacity` silently inherits it. Overriding the two keys here
+     retimes all of them, and every one written from now on, without touching a component. Audited
+     on a real project: ~31 utilities ran the stock curve while only the hand-written keyframes used
+     the considered one - two motion languages in one app.
 
-  /* Motion — no spring, no bounce. Press is faster than everything else on purpose: it is
-     acknowledgement, and acknowledgement late reads as a missed tap. */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+     THE TWO CUSTOM CURVES ARE THE SAME FAMILY, on purpose: easeOutCubic and its symmetric partner
+     easeInOutCubic. Same strength, so an entrance and a move read as the same hand. The ease-out is
+     also the curve run-trading@v2 and run-rebuild already ship, so all three repos now agree rather
+     than each carrying its own near-miss. This file previously declared --ease-out as
+     cubic-bezier(0.2, 0, 0, 1) while .panel-transition hard-coded a different curve two hundred
+     lines below - the exact drift the paragraph above warns about, introduced by a port that never
+     reconciled the two. */
+  /* A FASTER SPINNER MAKES THE APP FEEL FASTER TO LOAD, at identical real load times - perceived
+     performance, which is the same argument the easing roles above rest on. Tailwind's stock is
+     `spin 1s linear`, and 1s is a number nobody in this studio chose; it is the default that was
+     never overridden, the same shape of miss as the transition curve two lines down.
+     LINEAR IS CORRECT HERE AND STAYS. A spinner is constant motion, which is that curve's one
+     legitimate job - easing a spinner would make it appear to stall once per revolution.
+     0.7s rather than something quicker: past roughly half a second a spinner starts reading as
+     frantic rather than fast, which buys back the anxiety the speed was meant to remove. The
+     article makes the perceived-speed argument but gives no number, so this one is the studio's. */
+  --animate-spin: spin 0.7s linear infinite;
+
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: ease;
+
+  --font-heading: system-ui; /* TODO: choose a real display face — shipping system-ui is a reject */
+}
+
+/* A SECOND, SOFTER BORDER WEIGHT: THE LINE BETWEEN TWO ROWS, as opposed to the edge that finds a
+   control. Ported from run-trading@v2, which measured a real gap: their reference draws a row
+   divider distinctly lighter than a card edge, and an audit of their own app found every single
+   divider drawn at the CARD weight because only one border token existed. `--color-border` and
+   `--color-border-strong` both stay reserved for things that must be FOUND (an input, a button, a
+   focus target); `rule` is for a line that only has to separate, which is a quieter job.
+
+   WHERE IT APPLIES: any line separating siblings inside a container - rows in a list, the line
+   under a card header, a footer separator. WHAT KEEPS `border`: the edge around a card/popover/menu
+   (bounds rather than separates - though this repo's Card carries no edge at all, see its own
+   file), and anything that must stay findable (inputs, buttons).
+
+   IN `@theme static`, NOT the plain `@theme` above, and that is not a style choice. Tailwind
+   inlines a plain @theme colour straight into composed utilities (divide-*, box-shadow) at build
+   time rather than emitting a var() reference, so a .dark override of a plain-@theme token can
+   point at nothing (see the elevation note below, same bug, found the same day). run-trading@v2
+   hit this exact failure on this exact token: a near-white divider inlined onto a dark card,
+   measured at 14.6:1. `static` is Tailwind's documented switch for a token that must always emit
+   as a real custom property. */
+@theme static {
+  --color-rule: #f4f4f5;
+}
+
+/* The real elevation values. Plain custom properties, NOT @theme, so Tailwind never resolves them
+   and the .dark block below is what actually decides what renders. See the note in @theme.
+   THIS MUST STAY ABOVE .dark: :root and .dark carry equal specificity (0,1,0), so whichever comes
+   LAST wins. Below the dark block, light would silently override dark and this whole fix would be
+   a no-op - which is the same class of bug it exists to repair. */
+:root {
+  /* THE SKELETON'S SWEEP. A plain custom property rather than a `@theme` token, because only the
+     hand-written `.skeleton` rule reads it. Per-mode literals rather than an inversion: the sheen
+     lifts `surface` toward the lighter end in both modes, and the two ends are not mirror images —
+     a white sheen on a near-black ground reads as a flash rather than a sweep. */
+  --skeleton-sheen: #fbfbfc;
+  --elevation-card: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+  --elevation-press: inset 0 2px 4px 0 rgb(0 0 0 / 0.1);
 }
 
 /* Dark mode overrides — same custom property names, different values. Toggled via
-   ThemeProvider (src/components/theme-provider.tsx) adding/removing .dark on <html>.
-   Warm ink rather than neutral black, so the paper character survives the theme flip. */
+   ThemeProvider (src/components/theme-provider.tsx) adding/removing .dark on <html>. */
 .dark {
-  --color-bg: #12110f;
-  --color-surface: #1b1a17;
-  --color-elevated: #232120;
-  --color-border: #33302c;
-  --color-border-strong: #57524b;
-  --color-text: #eae7e1;
-  --color-ink-hover: #d8d4cd;
-  --color-muted: #928d85;
-  --color-pressed: #12110f;           /* dark presses to the page; see the note above */
-  --color-success: #71b871;
-  --color-warning: #f0ad4a;
-  --color-danger: #f2867d;
+  --color-bg: #0a0a0a;
+  --color-surface: #161616;
+  --color-elevated: #1e1e1e;
+  /* NOT a straight brightness step off --color-bg - matched to run-trading@v2's measured weight
+     instead of guessed. The old #2a2a2a sat 1.16:1 against --color-elevated (a card, an input, the
+     Google button all sit on that ground), which is functionally invisible: run trading's own
+     equivalent measures 1.40:1 there. #373737 reproduces that ratio to three figures (1.400).
+     This was the root of "the border isn't visible in dark mode" on the login card - Input, the
+     secondary Button and CodeInput all read border-border, so one token fixes all three at once. */
+  --color-border: #373737;
+  /* Nearly the same as its light value, and see the note on the light declaration for why: a line
+     that must clear 3:1 against near-white AND near-black has almost nowhere to go. */
+  --color-field: #888680;
+  --color-text: #ededed;
+  --color-muted: #8a8a8a;
+  --color-accent: #60a5fa;
+  /* No --color-accent-foreground, --color-accent-hover, --color-border-strong or --color-pressed
+     here on purpose: each is derived from --color-accent / --color-elevated / --color-bg above, all
+     of which this block redefines, so every one re-derives itself. --color-icon-press used to be
+     the one exception (see the light-mode comment on --color-pressed); it is gone, folded back into
+     --color-pressed, once IconButton gained a real border that keeps marking its edge at any
+     ground. */
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  /* Measured against --color-elevated (the card ground), not assumed to carry over: light's rule
+     sits at 1.099 against its card, and #262626 reproduces that to three figures (1.102) against
+     THIS mode's elevated (#1e1e1e) - a relative step, not the same hex re-guessed for a ground
+     that flipped from near-white to near-black. */
+  /* LIFTED FROM #262626 TO run-rebuild's VALUE (Luke, 2026-08-20). Compared side by side in dark,
+     the divider inside a raised object was hard to find here and legible there: base ran the rule
+     17 RGB steps below its own `border`, run-rebuild only 9, so the "two weights, two jobs"
+     distinction this token exists to make was doing barely half the work on a dark ground. A rule
+     that separates two rows still has to be SEEN separating them. */
+  --color-rule: #323130;
+  /* 22%, not light's 5%: see the light-mode comment on --color-selected. A near-black page needs a
+     far larger mix to land the same perceived step, and re-deriving light's formula here would
+     produce 1.094 - the barely-there value this token exists to replace. */
+  --color-selected: color-mix(in oklab, var(--color-bg) 78%, var(--color-text));
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.28);
-  --shadow-card: 0 2px 4px 0 rgba(0, 0, 0, 0.32);
-  --shadow-press: inset 0 2px 5px 0 rgba(0, 0, 0, 0.45);
+  /* The card shadow deepens on a dark ground. The derived hover/press COLOURS above need no entry
+     here: they mix off --color-accent / --color-text / --color-surface, all of which are redefined
+     in this block, so they re-derive themselves. */
+  --skeleton-sheen: #242424;
+  --elevation-card: 0 2px 4px 0 rgb(0 0 0 / 0.32);
+  --elevation-press: inset 0 2px 5px 0 rgb(0 0 0 / 0.45);
 }
-
-/* A NOTE ON --color-pressed, because the value looks arbitrary and is not.
- *
- * `run-rebuild` presses to "the page" because its ramp runs bg #f6f5f3 < surface #ffffff — the
- * card is LIGHTER than the page, so pressing to the page moves away from you. plot's ramp is
- * inverted: surface #f2efe9 < bg #faf8f5 < elevated #ffffff, so `surface` is a RECESSED panel and
- * `bg` sits above it. "Press to the page" here would move a control TOWARD you. So light gets a
- * literal one step below surface; dark agrees with Run's direction and presses to the page.
- *
- * (Backlog, not now: plot's ground tokens are misnamed — `surface` is recessed and `elevated` is
- * raised, with `bg` between them. Coherent values, misleading names. Rename to recessed/page/
- * raised when the next surface is built, not while a live rack depends on them.) */
 
 /* Spacing: no new tokens — use Tailwind's scale but ONLY the allowed steps
    (4 8 12 16 24 32 40 48 64 80 96 → 1 2 3 4 6 8 10 12 16 20 24). Never arbitrary [13px],
@@ -176,63 +348,221 @@
 @layer base {
   html {
     @apply bg-bg text-text;
-    font-family: var(--font-sans);
-
-    /* THE NATIVE UI FOLLOWS THE THEME. `.scroll-thin` themes the scrollbars we own; it cannot
-       reach one the BROWSER draws — the document's own, and the ones inside native controls like
-       date pickers and selects. Those read `color-scheme`, and with it unset the UA assumes light
-       and paints a light-grey bar down the side of a near-black page.
-       Driven by the .dark class below rather than `prefers-color-scheme`, because the theme here
-       is an explicit user choice that is allowed to disagree with the OS. */
-    color-scheme: light;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3 {
-    font-family: var(--font-heading);
+  /* SKINNY SCROLLBARS EVERYWHERE, BY DEFAULT. The standards-track properties, so no
+     ::-webkit-scrollbar block is needed.
+     ON `*`, NOT ON `html`, and that is the whole trick: `scrollbar-color` inherits but
+     `scrollbar-width` DOES NOT, so declaring both on the root styles the document's own scrollbar
+     and silently leaves every interior scroll pane at the OS default. Verified in the browser -
+     <main> computed `scrollbar-width: auto` while the root said `thin`. The alternative is an
+     opt-in `.scroll-thin` class, which is the same failure as a motion curve that is not the
+     default: applied to some panes, forgotten on the rest.
+     The thumb is `muted`, NOT `border`. Measured on /kitchen-sink, border sits at 1.22:1 against
+     the page in light and 1.38:1 in dark, which does not render a skinny thumb so much as delete
+     it; muted is 4.63:1 and is actually findable. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-muted) transparent;
   }
 
-  /* Keyboard-focus baseline for every interactive element. Mouse users unaffected.
-     NOT OPTIONAL on a product used outdoors in sunlight with gloves on — which is why every
-     component-local `focus-visible:outline-none` + alpha ring was removed: they suppressed this
-     and replaced it with a 30%-alpha ring at zero offset, on the most-tabbed controls in the app.
-     Now ink rather than accent, at 17.36:1 on `elevated`. */
+  /* ONE FOCUS RING FOR THE WHOLE APP, and components must not add their own.
+     A component-level `ring-2` or `border-accent` on top of this stacks into a double ring, which
+     is what the five primitives here used to do (each with its own ring width and colour, so focus
+     looked different on a button than on an input). Anything that sets `outline-none` is opting a
+     control out of being focusable-looking and needs a written reason: code-input.tsx is the one
+     such case, because its real field is transparent and it draws focus on the active box instead. */
   :focus-visible {
-    outline: 2px solid var(--color-text);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
-    border-radius: var(--radius-sm);
+  }
+
+  /* THE ONE EXCEPTION, AND IT IS CENTRAL RATHER THAN PER-COMPONENT. A text field already has a
+     border, so it states focus by changing that border's value instead of gaining a ring it did
+     not have before. That REPLACES the outline rather than adding to it, which is the thing the
+     rule above exists to prevent.
+     Declared here so no future field has to remember to opt out, and so a field cannot end up
+     wearing two indicators because someone forgot. Checkboxes and radios are excluded: they have
+     no border to move, so the outline is the only focus they get.
+     The border colours live on the components (input.tsx, textarea.tsx). */
+  input:not([type='checkbox']):not([type='radio']):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
   }
 }
 
-.dark {
-  color-scheme: dark;
+/* REDUCED MOTION IS SCOPED TO WHAT MOVES, not to everything.
+   The blanket version of this rule freezes all transitions, and the result feels broken rather than
+   calm: the overwhelming majority of moves in a UI like this are colour and opacity, which trigger
+   nobody's vestibular system and are doing real work (hover feedback, focus, loading). What the
+   preference is actually for is movement through space, so that is what is cut: transforms, width
+   and height animations, and anything that loops. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property:
+      color, background-color, border-color, outline-color, fill, stroke, opacity, box-shadow !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* NOTE ON TABULAR FIGURES. Quantities sit in columns and must align — a takeoff whose numbers do
-   not line up reads as guessed. Use Tailwind's built-in `tabular-nums` for that, NOT a custom
-   class: a `.tabular` utility was declared here briefly and the token linter rejected it within a
-   minute, correctly. It looked exactly like a design-system class and was not one, which is the
-   precise failure this rule exists to catch. The framework already ships the utility. */
+/* A SHIMMER, NOT A PULSE (2026-08-20, house rule). Both are conventional; the research is not
+   neutral between them - a sweep is perceived as SHORTER than an opacity pulse at an identical real
+   duration, which is the whole job of a loading placeholder. A pulse also fades the block toward
+   whatever is behind it, so on a ground close to the skeleton's own it approaches invisibility at
+   the trough. That is not hypothetical: run-rebuild aliases `elevated` to `surface`, so `Skeleton`
+   ported verbatim became the exact colour of the Card it sat in and did not render at all.
+   `linear`, AND THAT IS THE CURVE TABLE'S OWN ANSWER rather than an exception to it: a sweep is
+   constant motion, which is `linear`'s one legitimate job, the same reason the spinner keeps it.
+   Easing a sweep makes it appear to stall once per cycle.
+   1.6s sits inside the 1.5-2s band the guidance gives: fast enough to read as active, slow enough
+   that it never pulls the eye off the content arriving around it. */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background-color: var(--color-surface);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--skeleton-sheen) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s linear infinite;
+}
 
-/* Scrollbars we own. Applied to any element that scrolls, never the document (which should not).
-   Without this a scroll region gets the platform's grey slab, which reads as unstyled.
+/* THE SKELETON GOES STILL, NOT SLOW. The global reduced-motion rule above times every animation to
+   0.01ms, which for a sweep parks the sheen wherever it happened to stop and leaves a bright band
+   frozen across the block - a placeholder that looks broken rather than one that is waiting.
+   Dropping the gradient leaves a flat `surface` block, which still reads as "content is coming"
+   with no motion at all.
 
-   DECLARED WITH @utility, NOT AS A PLAIN CLASS. Tailwind v4 only knows about a class if it is
-   registered, and the token linter reads the same list: a bare `.scroll-thin {}` here compiles
-   fine but every use of it is flagged as a classname that is not a Tailwind class. That is the
-   rule working, not a false positive, and @utility is the answer rather than an allowlist entry. */
-@utility scroll-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+   THIS BLOCK MUST SIT BELOW `.skeleton`, NOT INSIDE THE REDUCED-MOTION BLOCK ABOVE, and it shipped
+   the wrong way round for a day. A media query adds NO specificity, so two `.skeleton` rules are
+   tied at (0,1,0) and source order alone decides: declared first, the override lost to the sweep
+   and did nothing at all. The failure was invisible in every ordinary session because it only
+   appears with reduced motion ON, and it was worse than the bug it was written to prevent - the
+   universal `animation-duration: 0.01ms !important` still applied, freezing the sheen mid-sweep.
+   Same trap, and the same fix, as the `:root` elevation block that has to sit above `.dark`. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Use on a cursor character when streaming AI text */
 .cursor-blink {
   animation: blink 1s step-end infinite;
+}
+
+/* THE INVISIBLE 44PX HIT AREA FOR A BARE ICON CONTROL, ported from run-trading@v2's
+   `.lift-press::after`. IconButton's visible chip is 40px (h-10 w-10), under the 44x44 touch
+   target every mobile HIG asks for. Growing the VISIBLE chip to 44px would make it read as a
+   primary control rather than a compact one; expanding the hit area invisibly keeps the look and
+   fixes the target size at once. -2px per side turns 40 into 44 - run-trading's own chip is 36px
+   and uses -4px, so this is the same mechanic at this repo's chip size, not the same number. */
+/* THE ONE PANEL COLLAPSE, shared by anything that opens and shuts along an edge.
+   Named for the behaviour rather than for the sidebar, because the moment a second panel exists
+   the two must match, and the only way two panels reliably match is by being the SAME declaration
+   rather than two that currently agree - a duration copied by hand drifts the first time one of
+   them is tuned.
+   300ms, not the project's 200ms default: a panel that resizes the whole layout wants longer than
+   a colour change, and this is a deliberate override rather than a per-component guess.
+   NAMES `translate`, NOT `transform`: Tailwind v4's -translate-x-* utilities set the standalone
+   `translate` property, so a transition listing `transform` animates nothing and the panel snaps.
+   Listing the two properties rather than using `transition-all` also keeps colour and shadow off
+   the clock, which is what made the old version fight the theme toggle. */
+.panel-transition {
+  /* SHORTHAND FOR THE TIMING, LONGHAND FOR THE PROPERTIES. Writing it out per property repeats the
+     duration and the curve once each, which is two more places for them to drift apart the first
+     time either is tuned. The shorthand with no property named defaults to `all`, and the
+     transition-property line below then narrows it - so the ORDER matters, the longhand has to come
+     after or it is overwritten by the shorthand's implicit `all`. */
+  transition: 0.3s var(--ease-in-out);
+  transition-property: width, translate;
+}
+
+/* A MENU PANEL THAT OPENS AND CLOSES WITHOUT A STATE MACHINE.
+   This was a pair of keyframe animations, which cannot be interrupted: reopening mid-close
+   restarted the exit from the top instead of turning around, and unmounting had to be driven from
+   an animationend listener with a second `closing` flag and a pointer-events guard for the case
+   where that event never fires. Two bugs came out of coordinating those flags. A TRANSITION is
+   interruptible by definition - the browser reverses from wherever the value currently is.
+
+   `display` IS IN THE TRANSITION, which is the part that makes an exit possible while still
+   ending at display:none. allow-discrete defers the switch to none until the transition finishes
+   on the way out, and applies it immediately on the way in. Closed therefore means genuinely
+   closed: out of the accessibility tree, out of the tab order, unclickable, with no aria-hidden
+   or inert to keep in sync.
+
+   @starting-style supplies the "before" state for the first frame the panel is displayed. Without
+   it there is nothing to move FROM and the panel just appears.
+
+   Exit is faster than entry, the one asymmetry worth keeping: an arrival is worth watching, a
+   dismissal is something the user already decided on. Scale starts at 0.98 rather than 0 - an
+   element growing from nothing reads as arriving from nowhere. */
+.menu-panel {
+  transition: 0.14s var(--ease-out);
+  transition-property: opacity, scale, translate, display;
+  transition-behavior: allow-discrete;
+  /* Grows out of the row that opened it, not out of its own centre. */
+  transform-origin: bottom left;
+}
+.menu-panel[data-open='true'] {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+}
+.menu-panel[data-open='false'] {
+  opacity: 0;
+  scale: 0.98;
+  translate: 0 4px;
+  display: none;
+  transition-duration: 0.1s;
+}
+@starting-style {
+  .menu-panel[data-open='true'] {
+    opacity: 0;
+    scale: 0.98;
+    translate: 0 4px;
+  }
+}
+
+/* SCROLLS, BUT NEVER SHOWS A BAR. For a sidebar specifically: the global rule above gives every
+   scroll container a thin bar, which is right for content but wrong for a nav rail, where the bar
+   is chrome sitting inside a surface whose whole job is to be quiet. The two properties cover the
+   standards-track engines and WebKit respectively; both are needed. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.icon-hit-area::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
 }

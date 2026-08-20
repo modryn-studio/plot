@@ -2,42 +2,29 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
-import { cn } from '@/lib/cn';
+import { IconButton } from './icon-button';
 
-/* A CONTROL, so: radius-sm (8), a rest shadow, and a press that pushes IN.
+/* IconButton, and nothing else. Ported from run-trading@v2, where this file is a single-line
+ * consumer of the same primitive: no bespoke border, no bespoke background, no bespoke rest state.
  *
- * Three things were wrong here and all three came from never auditing the boilerplate:
- *   - `active:scale-[0.98]` — a SHRINK is not a push. The object gets smaller and stays flat.
- *     Replaced with the system's `--shadow-press` inset, so the whole app has one press gesture.
- *   - `focus-visible:ring-accent/30 focus-visible:outline-none` — this SUPPRESSED the app-wide
- *     focus outline that globals.css calls "not optional on a product used outdoors in sunlight
- *     with gloves on", and swapped it for a 30%-alpha ring at zero offset.
- *   - `rounded-md` — that is the SLOT radius (12). A toggle is a control (8).
- *
- * Hover moves the ink only. The border stays: this control has a ground of its own, and a ground
- * that changes on hover reads as a different object rather than the same one under a pointer.
+ * This used to carry its own classes (`border-border bg-surface ... border`), which is a real
+ * defect and not a style choice: it gave the toggle an always-on ground and edge that IconButton's
+ * whole design explicitly avoids for a lone glyph in a rail (see icon-button.tsx). The result was a
+ * toggle that looked like an object at rest instead of a bare glyph that raises to a chip on hover
+ * and pushes in on press. Every other icon-only control in the app already went through
+ * IconButton; this was the one left retyping its own version by hand, and it was the version that
+ * drifted.
  */
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button
-      type="button"
+    <IconButton
       onClick={toggleTheme}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={cn(
-        'border-border bg-elevated text-muted inline-flex h-11 w-11 items-center justify-center',
-        'rounded-sm border shadow-sm',
-        'transition duration-100 ease-out',
-        'hover:border-border-strong hover:text-text',
-        'active:bg-pressed active:shadow-press',
-        className
-      )}
+      className={className}
     >
-      {/* Sized through the same 18px the IconButton uses. Not routed through <Icon> because the
-          moon/sun pair is chrome for the toggle itself rather than product vocabulary, and adding
-          two names to MARKS that only this file uses would grow the map for nothing. */}
-      {theme === 'dark' ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
-    </button>
+      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+    </IconButton>
   );
 }

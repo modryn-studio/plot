@@ -1,28 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Source_Serif_4 } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/config/site';
 import { ThemeProvider } from '@/components/theme-provider';
+import { IconProvider } from '@/components/ui/icon';
 import './globals.css';
 
-/* TWO FACES, AND THE SERIF IS THE POINT. A field guide is a serif document and every AI SaaS is
- * not, which makes this the cheapest differentiator available and one that serves the standard
- * rather than decorating it. See docs/design-system.md §0 — document mode is Peterson / Sibley /
- * Merlin, canvas mode is Recraft's shell.
- *
- * Both are loaded as CSS variables and consumed by --font-heading / --font-sans in globals.css,
- * so no component ever names a font. */
-const sourceSerif = Source_Serif_4({
-  subsets: ['latin'],
-  variable: '--font-source-serif',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// NO FONT IS DECLARED HERE ON PURPOSE. `--font-heading` in globals.css is system-ui with a TODO
+// on it: choose a real display face per project (next/font/google, then point the token at its
+// variable). Shipping a framework default as the brand face is what unstyled output looks like,
+// and picking one here would mean every project inherits a decision nobody made for it.
 
 export const viewport: Viewport = {
   // Shrinks layout viewport when an on-screen keyboard opens — h-dvh containers
@@ -45,18 +31,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: ThemeProvider's blocking script sets the .dark class
     // before hydration, which intentionally differs from the server-rendered markup.
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${sourceSerif.variable} ${inter.variable}`}
-    >
-      <body className="antialiased">
-        {/* NO GLOBAL FLOATING ThemeToggle. The base shipped one pinned at `fixed top-4 right-4`
-            with a note to "move it into a real header when the project grows one" — that moment
-            arrived. A fixed button over every route lands on top of whatever a real shell puts in
-            its top-right corner, which is exactly what it did to the kitchen sink's header.
-            Each surface with a header now renders its own; see kitchen-sink and the login view. */}
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-heading antialiased">
+        {/* IconProvider wraps everything so size and stroke are the DEFAULT for every lucide icon
+            in the app, including ones written in Server Components. See ui/icon.tsx. */}
+        <ThemeProvider>
+          <IconProvider>
+            {/* NO FLOATING THEME TOGGLE. There is exactly one theme control in the app and it
+                lives in the sidebar's account menu (components/shell/account-menu.tsx), where a
+                user looks for their own settings. A corner control belongs to no surface: it
+                overlaps whatever the page happens to put underneath it, and two ways to do one
+                thing is how a shell starts feeling assembled rather than designed. A project with
+                no sidebar puts the toggle in its own header rather than bringing this back. */}
+            {children}
+          </IconProvider>
+        </ThemeProvider>
         {/* Vercel Web Analytics: pageviews only, no cookie, no cross-site identity, so it does not
             add anything to the Privacy Policy's cookie section. Inert in development and on any
             non-Vercel host, so local runs never emit. Our own /api/track handles product events;

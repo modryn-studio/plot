@@ -44,6 +44,11 @@ export default [
           whitelist: [
             // Hand-written utilities defined in globals.css outside @theme.
             'cursor-blink',
+            'icon-hit-area',
+            'no-scrollbar',
+            'menu-panel',
+            'panel-transition',
+            'skeleton',
             // Structural, not visual: these carry no design decision.
             'sr-only',
             'group',
@@ -77,18 +82,15 @@ export default [
         'error',
         {
           selector: 'JSXText[value=/\\u2014/]',
-          message:
-            'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
+          message: 'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
         },
         {
           selector: 'Literal[value=/\\u2014/]',
-          message:
-            'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
+          message: 'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
         },
         {
           selector: 'TemplateElement[value.raw=/\\u2014/]',
-          message:
-            'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
+          message: 'No em dashes in app content. Use a colon, a full stop, or parentheses instead.',
         },
       ],
     },

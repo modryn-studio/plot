@@ -20,9 +20,9 @@ import { site } from '@/config/site';
 import { analytics } from '@/lib/analytics';
 import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { CodeInput } from '@/components/ui/code-input';
-import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { TextField } from '@/components/ui/text-field';
 
 type Busy = 'google' | 'sending' | 'verifying' | null;
 
@@ -91,7 +91,7 @@ export function Login() {
      attacker-supplied by construction, and an unchecked one would let a link like
      `yourapp.com/login?next=https://evil.example` hand a freshly authenticated user to somebody
      else's page. See lib/next-path.ts.
-     `useSearchParams` needs a Suspense boundary above it, which the route already provides. */
+     `useSearchParams` needs a Suspense boundary above it, which login/page.tsx provides explicitly. */
   const next = safeNext(useSearchParams().get('next'));
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -167,7 +167,10 @@ export function Login() {
     try {
       // Better Auth resolves with { error } rather than throwing, so a failed send must NOT fall
       // through to the "we sent you a code" state.
-      const res = await authClient.emailOtp.sendVerificationOtp({ email: address, type: 'sign-in' });
+      const res = await authClient.emailOtp.sendVerificationOtp({
+        email: address,
+        type: 'sign-in',
+      });
       // The user clicked "Use a different email" while this was in flight - don't paint this
       // response over a screen they already left.
       if (abandonedRef.current) return;
@@ -235,110 +238,117 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      {/* Rendered here rather than globally. The root layout used to pin one toggle over every
-          route; it was removed because a fixed button in the top-right corner collides with any
-          surface that has a real header of its own. This view was already importing ThemeToggle
-          without rendering it, so it was relying on that global one and would otherwise have lost
-          the control entirely. */}
-      <div className="flex justify-end px-6 pt-4">
-        <ThemeToggle />
-      </div>
-      <main className="flex flex-1 items-center justify-center px-6 pb-16">
-        <div className="w-full max-w-sm">
-          <h1 className="text-h1 text-center text-balance">{site.name}</h1>
-          <p className="text-body-lg text-muted mt-4 text-center text-pretty">{site.description}</p>
+    /* ONE <main>, AND IT LIVES HERE. This used to be a wrapper div around a <main>, while
+       login/page.tsx wrapped the whole thing in a SECOND <main> - two landmarks, one nested
+       inside the other, which is invalid and gives a screen reader two "main" regions to choose
+       between. The page is now a bare Suspense boundary and this component owns the landmark.
+       The outer flex-column wrapper went with it: it existed to hold a header that was never
+       built, and min-h-dvh belongs on the thing that centres the card. */
+    <main className="flex min-h-dvh items-center justify-center px-6 py-16">
+      {/* The theme toggle is rendered once, globally, in src/app/layout.tsx. */}
+      <div className="w-full max-w-sm">
+        <h1 className="text-h1 text-center text-balance">{site.name}</h1>
+        <p className="text-body-lg text-muted mt-4 text-center text-pretty">{site.description}</p>
 
-          {/* The card frame stays mounted across states - only its contents swap - so a successful
-              send reads as "the card you just used answered you", not as a page reset. */}
-          <div className="border-border bg-surface mt-8 rounded-md border p-6">
-            {/* One error slot, at the TOP: a Google failure originates from the button above, so a
+        {/* The chrome (raised ground, radius, lift, and NO hairline) lives in ui/card.tsx.
+              Padding is the caller's. The card frame stays mounted across states, only its
+              contents swap, so a successful send reads as "the card you just used answered you"
+              rather than as a page reset. */}
+        <Card className="mt-8 p-6">
+          {/* One error slot, at the TOP: a Google failure originates from the button above, so a
                 message under the email form would attribute it to the wrong control. */}
-            {error && <p className="text-small text-danger mb-4 text-center">{error}</p>}
+          {error && <p className="text-small text-danger mb-4 text-center">{error}</p>}
 
-            {step === 'code' ? (
-              <CodePanel
-                key={sentCount}
-                email={email.trim()}
-                code={code}
-                onCode={(v) => {
-                  setCode(v);
-                  // Drop the rejected-code message the moment they start retyping, so the boxes
-                  // don't sit red underneath a fresh attempt.
-                  if (error) setError(null);
+          {step === 'code' ? (
+            <CodePanel
+              key={sentCount}
+              email={email.trim()}
+              code={code}
+              onCode={(v) => {
+                setCode(v);
+                // Drop the rejected-code message the moment they start retyping, so the boxes
+                // don't sit red underneath a fresh attempt.
+                if (error) setError(null);
+              }}
+              onComplete={verify}
+              verifying={busy === 'verifying'}
+              invalid={Boolean(error) && busy !== 'verifying'}
+              cooldown={cooldown}
+              sending={busy === 'sending'}
+              onResend={() => void sendCode(true)}
+              onBack={() => {
+                abandonedRef.current = true;
+                clearPending();
+                setStep('form');
+                setCode('');
+                setError(null);
+              }}
+            />
+          ) : (
+            <>
+              <Button
+                onClick={withGoogle}
+                loading={busy === 'google'}
+                disabled={Boolean(busy)}
+                variant="secondary"
+                size="lg"
+                className="w-full"
+              >
+                <GoogleMark />
+                Continue with Google
+              </Button>
+
+              {/* A bare word, no rules. The rules were added on the general principle that a
+                    separator needs a line, and they are right on a flat page; inside a card that now
+                    lifts off the ground with its own edge and shadow, a second horizontal line is
+                    chrome competing with the frame. Luke's call, matching run-trading. */}
+              <div className="text-caption text-muted my-4 text-center uppercase">or</div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void sendCode();
                 }}
-                onComplete={verify}
-                verifying={busy === 'verifying'}
-                invalid={Boolean(error) && busy !== 'verifying'}
-                cooldown={cooldown}
-                sending={busy === 'sending'}
-                onResend={() => void sendCode(true)}
-                onBack={() => {
-                  abandonedRef.current = true;
-                  clearPending();
-                  setStep('form');
-                  setCode('');
-                  setError(null);
-                }}
-              />
-            ) : (
-              <>
-                <Button
-                  onClick={withGoogle}
-                  loading={busy === 'google'}
-                  disabled={Boolean(busy)}
-                  variant="secondary"
-                  size="lg"
-                  className="w-full gap-3"
-                >
-                  <GoogleMark />
-                  Continue with Google
-                </Button>
-
-                <div className="text-caption text-muted my-4 text-center uppercase">or</div>
-
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void sendCode();
+                className="flex flex-col gap-3"
+              >
+                {/* TextField, not a bare Input with an aria-label: this screen used to render
+                      zero <label> elements. labelHidden because the card is unambiguous and a
+                      visible label would be the only one on the screen. */}
+                <TextField
+                  label="Email address"
+                  labelHidden
+                  type="email"
+                  required
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    // Clear a stale failure as soon as the user acts on it.
+                    if (error) setError(null);
                   }}
-                  className="flex flex-col gap-3"
+                  placeholder="Enter your email"
+                />
+                <Button
+                  type="submit"
+                  loading={busy === 'sending'}
+                  disabled={Boolean(busy)}
+                  size="lg"
+                  className="w-full"
                 >
-                  <Input
-                    type="email"
-                    required
-                    inputMode="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      // Clear a stale failure as soon as the user acts on it.
-                      if (error) setError(null);
-                    }}
-                    placeholder="Enter your email"
-                    aria-label="Email address"
-                  />
-                  <Button
-                    type="submit"
-                    loading={busy === 'sending'}
-                    disabled={Boolean(busy)}
-                    size="lg"
-                    className="w-full"
-                  >
-                    Continue with email
-                  </Button>
-                </form>
+                  Continue with email
+                </Button>
+              </form>
 
-                {/* PROJECT TODO: these two need real pages before this is public. */}
-                <p className="text-small text-muted mt-6 text-center">
-                  By continuing you agree to our Terms and Privacy Policy.
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
+              {/* PROJECT TODO: these two need real pages before this is public. */}
+              <p className="text-caption text-muted mt-6 text-center">
+                By continuing you agree to our Terms and Privacy Policy.
+              </p>
+            </>
+          )}
+        </Card>
+      </div>
+    </main>
   );
 }
 
@@ -406,7 +416,11 @@ function CodePanel({
           disabled={cooldown > 0 || sending || verifying}
           className="hover:text-text font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
         >
-          {cooldown > 0 ? `Send a new code in ${cooldown}s` : sending ? 'Sending' : 'Send a new code'}
+          {cooldown > 0
+            ? `Send a new code in ${cooldown}s`
+            : sending
+              ? 'Sending'
+              : 'Send a new code'}
         </button>
         <button
           onClick={onBack}
@@ -425,10 +439,22 @@ function CodePanel({
 function GoogleMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden className="shrink-0">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
     </svg>
   );
 }

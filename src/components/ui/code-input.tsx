@@ -65,6 +65,12 @@ export function CodeInput({
 
   // Paste is handled explicitly so "123 456" and "code: 123456" both work; the default would
   // insert the punctuation and blow the maxLength.
+  //
+  // REPLACES THE WHOLE VALUE, deliberately, rather than merging with whatever is already typed.
+  // A code arrives as one unit - from a password manager, a messaging app, the OS's own "paste
+  // code from clipboard" suggestion - and every one of those pastes the full six digits, not a
+  // fragment meant to land at the cursor. Two partial digits typed by hand and then a six-digit
+  // paste replacing them is the expected outcome, not data loss: the paste IS the code.
   function handlePaste(e: ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
     commit(e.clipboardData.getData('text'));
@@ -107,14 +113,27 @@ export function CodeInput({
             <div
               key={i}
               className={cn(
-                // tabular-nums so a digit landing in a box never shifts its neighbours.
-                'flex h-12 min-w-0 max-w-12 flex-1 items-center justify-center rounded-sm border text-h2 tabular-nums transition-colors',
+                /* NO TRANSITION, and that is the point rather than an omission.
+                   The active ring moves one box per keystroke, and someone entering a code types
+                   the six faster than a 200ms fade can finish, so the highlight was still catching
+                   up to the box before while the next digit landed. A keyboard action has to land
+                   on the frame it was pressed: anything that fades behind it reads as the input
+                   lagging the user, which on a sign-in screen reads as the code not registering.
+                   The rule this comes from: never animate a keyboard-initiated action.
+                   (Filed under "You Don't Need Animations" in modryn-hq's ui-ux-sources.md.)
+                   tabular-nums so a digit landing in a box never shifts its neighbours. */
+                'flex h-12 min-w-0 max-w-12 flex-1 items-center justify-center rounded-sm border text-h2 tabular-nums',
                 disabled && 'opacity-50',
                 invalid
                   ? 'border-danger text-danger'
                   : isActive
-                    ? 'border-text text-text'
-                    : 'border-border text-text'
+                    ? 'border-accent text-text'
+                    /* `field`, NOT `border` (2026-08-20). A code box carries no label and no
+                       placeholder, so its outline is the only thing saying a control is here - the
+                       case SC 1.4.11 names, and `border` is 1.30:1 on `elevated`, which fails it.
+                       Input and Textarea deliberately keep `border`: they always carry a placeholder
+                       or a label, so their edge can stay faint at rest and jump on focus. */
+                    : 'border-field text-text'
               )}
             >
               {value[i] ?? ''}

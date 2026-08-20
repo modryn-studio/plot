@@ -1,36 +1,30 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-/* A BORDERED SURFACE, AND DELIBERATELY NOT A SHADOWED ONE.
+/* THE ONE RAISED SURFACE: a lighter ground, a radius, and the neutral lift.
  *
- * Document mode is a field guide, and a field guide has no drop shadows. Peterson and Sibley
- * separate things with rules and whitespace because ink on paper cannot cast a shadow, and the
- * result reads as reference rather than as an interface. Shadow is reserved here for things that
- * genuinely float ABOVE the canvas — the prompt bar, popovers, modals — where the elevation is
- * literally true rather than decorative.
+ * A RAISED OBJECT IS A GROUND CHANGE PLUS A SHADOW, AND CARRIES NO HAIRLINE. A drawn edge and a
+ * cast shadow are two different claims about the same object: the border says "here is a box ON
+ * the page", the shadow says "here is a sheet ABOVE it". Running both makes the card read as the
+ * first while paying for the second, which is why a bordered-and-shadowed card always looks
+ * slightly cheap without anyone being able to say why. Ported from run-trading@v2, which reversed
+ * its own "flat + hairline" rule after measuring the two side by side.
  *
- * So: `border` for a card, `shadow` only for a thing over the photograph.
+ * The hairline is NOT gone from the system. It survives INSIDE these objects: dividing rows,
+ * underlining a card header, separating a modal footer from its scroll. That is where it was always
+ * doing the work. What it stopped doing is outlining the object itself.
+ *
+ * `bg-elevated`, not `bg-surface`. In this palette `surface` is DARKER than the page, so a card
+ * built on it sinks instead of lifting. `elevated` is the token whose stated job is "raised cards,
+ * popovers, modals" and it is lighter than the page in both modes.
+ *
+ * PADDING STAYS THE CALLER'S — a modal panel takes none, a content card takes p-6 — but the CHROME
+ * lives here, so a new screen cannot invent its own. This exists because the same four classes were
+ * being retyped per screen, which is exactly how the login card ended up on the wrong ground with a
+ * border nobody meant to keep.
  */
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn(
-        'border-border bg-elevated rounded-md border p-6',
-        className
-      )}
-      {...props}
-    />
-  );
-}
+export const cardSurface = 'bg-elevated shadow-card rounded-lg';
 
-/* A row inside a list, sharing the card's edge rather than drawing its own. The takeoff and the
- * site summary are lists, not stacks of cards — a dozen bordered boxes is the pattern that makes
- * a Sibley page impossible. */
-export function Row({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn('border-border border-b py-4 last:border-b-0', className)}
-      {...props}
-    />
-  );
+export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn(cardSurface, className)} {...props} />;
 }
