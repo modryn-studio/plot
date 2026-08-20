@@ -320,10 +320,14 @@ dependency.
 ## 7. What phase 5 needs before it can start
 
 1. **A Neon project and a filled `.env.local`.** Then `npx drizzle-kit migrate`.
-2. **Two open decisions from [`spec.md`](spec.md) §6 that block slice 1** — geography at launch
-   (§4 above proposes Wisconsin, so this may already be settled by writing it down), and whether
-   signup gates the base plan.
+2. ~~**Two open decisions from [`spec.md`](spec.md) §6 that block slice 1**~~ — both closed
+   2026-08-20: **Wisconsin only**, and **signup comes first**. Reasoning in
+   [`build-plan.md`](build-plan.md) §2. Five decisions remain open; none block slice 0 or 1, and
+   the wave table names which wave each one blocks.
 3. **The walking skeleton**, per the blueprint: address in → parcel + aerial out → one rendered
    value → deployed. Read `modryn-builds/yard`'s `src/lib/{parcel,site-imagery,geo}.ts` first;
    they already do the hard half and the projection maths is the part most likely to be got
    subtly wrong twice.
+
+4. **The slicing itself — [`build-plan.md`](build-plan.md)**, written 2026-08-20. Sixteen slices,
+   seven waves, three in flight at most. It is the document phase 5 is run from.

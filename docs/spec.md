@@ -539,8 +539,8 @@ returns to start a second one.
 | Plant palette size and source | curated ~150 · licensed dataset | before S5 | — |
 | Guide library: how many project types at launch | 3 · 8 · 20 | before S8 | — |
 | Guide grounding source | university extension publications *(leaning: free, regional, citable)* | before S8 | — |
-| Permits and easements | out · surface as a warning · full lookup | before phase 4 | — leaning **surface as a warning**, since `yard/docs/discovery.md` names easements as one of the four things that sink amateur projects, and we already hold the parcel boundary |
-| Does signup gate the base plan | before · after | before slice 1 | — |
+| Permits and easements | — | — | **Surface as a warning. Decided 2026-08-20.** `yard/docs/discovery.md` names easements as one of the four things that sink amateur projects, and we already hold the parcel boundary, so a setback warning costs a comparison we can already do. A real lookup is 72 county jurisdictions and is not v1. Lands in the `site` slice. |
+| Does signup gate the base plan | — | — | **Signup first. Decided 2026-08-20**, reasoning in [`build-plan.md`](build-plan.md) §2. `property.userId` is NOT NULL and unique, so an anonymous base plan is a second code path in the first slice. The Wisconsin notice and S16 answer "do you cover me?" without an account. |
 | Geography at launch | — | — | **Wisconsin only. Decided 2026-08-20** (Luke), see below. |
 
 ### Wisconsin only, for v1 — decided 2026-08-20

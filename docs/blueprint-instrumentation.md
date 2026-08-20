@@ -80,7 +80,7 @@ prompted it. Dates are commit dates.
 | 2 Definition | 2026-08-17 | 2026-08-17 | The longest thinking, the least typing. Rewritten once mid-phase when the direction changed from project-rooted to property-rooted. | Yes, 5/5, after the data-source decisions moved from open to proven. |
 | 3 Design system | 2026-08-17 | **2026-08-20** | The one that went wrong. Locked once against the template, found to violate house rules that appeared three days later, deleted, and re-locked against `design-rules.md`. | Eventually. Not on the first attempt, and the first attempt LOOKED clean: lint green, typecheck green, contrast gate ticked against a check that had never run. |
 | 4 Architecture | 2026-08-20 | 2026-08-20 | Cheap, and suspiciously so. `yard` had already built the data layer, so most decisions were "read the working one" rather than "decide". | 5/6. Migration generated, not applied: no database provisioned yet. |
-| 5 Build | | | | |
+| 5 Build | 2026-08-20 | | Started by writing a document the blueprint does not have. Phase 5 assumes a wave table exists and never says to produce one, so `docs/build-plan.md` is the first artifact — sixteen slices, seven waves. Writing it forced three decisions the earlier phases had left open. | |
 | 6 Hardening | | | | |
 | 7 Launch | | | | |
 

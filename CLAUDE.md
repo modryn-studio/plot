@@ -31,8 +31,9 @@ table. Everything in `src/` is boilerplate plus the rack.
 |---|---|
 | 1 Discovery | passed — `docs/problem-brief.md` |
 | 2 Definition | passed — `docs/spec.md` |
-| 3 Design system | **re-opened 2026-08-20**, see below |
-| 4 Architecture | not started |
+| 3 Design system | re-locked 2026-08-20 — `docs/design-system.md`, and the reset note below |
+| 4 Architecture | passed — `docs/architecture.md`; schema written, migration generated, **not applied** |
+| 5 Build | **started 2026-08-20** — `docs/build-plan.md` is the slice list and wave table |
 
 ### The design system was reset on 2026-08-20, and this is the one thing to read first
 
@@ -68,12 +69,15 @@ the new system when a real screen asks, one sink section per primitive, same com
 | `docs/problem-brief.md` | Phase 1 — who this is for and why it cannot be cloned |
 | `docs/spec.md` | Phase 2 — **what v1 is.** Point agents here, not at your memory of it |
 | `docs/walkthrough.md` | The same spec as a story, for picturing the flow |
-| `docs/design-system.md` | Phase 3 — **partly superseded**, see the reset note above |
+| `docs/design-system.md` | Phase 3 — short by design; `modryn-hq/playbooks/design-rules.md` is the authority it defers to |
+| `docs/architecture.md` | Phase 4 — where every piece of state lives, and why |
+| `docs/build-plan.md` | Phase 5 — **the slices, the order, and the wave table.** Start here to build |
 | `docs/recon.md` | The competitive read, and why the category fails |
 | `docs/reference/` | Per-product teardowns from live drives |
 
-**Seven decisions in `docs/spec.md` §6 are still open**, two of which block the first slice:
-geography at launch (the parcel DB is Wisconsin-only), and whether signup gates the base plan.
+**Five decisions in `docs/spec.md` §6 are still open**, and none of them block slice 0 or 1 —
+`build-plan.md` §4 names which wave each one blocks. The three that did block the start
+(geography, signup gating, permits) were decided on 2026-08-20.
 
 ---
 
