@@ -1,14 +1,34 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Source_Serif_4 } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/config/site';
 import { ThemeProvider } from '@/components/theme-provider';
 import { IconProvider } from '@/components/ui/icon';
 import './globals.css';
 
-// NO FONT IS DECLARED HERE ON PURPOSE. `--font-heading` in globals.css is system-ui with a TODO
-// on it: choose a real display face per project (next/font/google, then point the token at its
-// variable). Shipping a framework default as the brand face is what unstyled output looks like,
-// and picking one here would mean every project inherits a decision nobody made for it.
+/* TWO FACES, AND THE SERIF IS THE ARGUMENT — the boilerplate's TODO, answered.
+ *
+ * This product's document half is a field guide (Peterson / Sibley / Merlin), and a field guide is
+ * a serif document. Every AI SaaS is not, which makes this the cheapest differentiator available
+ * and one that serves the standard rather than decorating it.
+ *
+ * BODY TAKES THE SANS, deliberately diverging from the boilerplate's single face. The reading here
+ * happens outdoors, on a phone, in sunlight, at 14px — where a text serif gives up legibility it
+ * does not owe. Headings get the serif; the interface gets Inter.
+ *
+ * Both load as CSS variables consumed by --font-heading / --font-sans in globals.css, so no
+ * component ever names a font. */
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-source-serif',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   // Shrinks layout viewport when an on-screen keyboard opens — h-dvh containers
@@ -31,8 +51,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: ThemeProvider's blocking script sets the .dark class
     // before hydration, which intentionally differs from the server-rendered markup.
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-heading antialiased">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${sourceSerif.variable} ${inter.variable}`}
+    >
+      {/* `font-sans`, not the boilerplate's `font-heading`: the interface is the sans and the
+          serif is reserved for headings, which globals.css assigns in @layer base. */}
+      <body className="font-sans antialiased">
         {/* IconProvider wraps everything so size and stroke are the DEFAULT for every lucide icon
             in the app, including ones written in Server Components. See ui/icon.tsx. */}
         <ThemeProvider>
