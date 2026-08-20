@@ -22,16 +22,21 @@ merged in any order.
 
 ## 1. Before slice 0 — the ground that does not exist yet
 
-**Closed 2026-08-20**, all but one item.
+**Closed 2026-08-20.** Slice 0 is unblocked.
+
+**Production host: `https://plot-steel.vercel.app`.** `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL`
+are both set to it on Vercel and both left blank locally, where auth resolves per request. Every
+var in `.env.local` goes on the deploy — **including `REPLICATE_API_TOKEN`**, which the boilerplate's
+inherited comment wrongly described as local-only; see the row below.
 
 | | What | Why it blocks |
 |---|---|---|
 | ☑ | A Neon project for plot | Every slice writes something. `withered-violet-63924132`, own project — **not** groundwork's, which has real address data on it |
 | ☑ | `.env.local` with `DATABASE_URL`, `BETTER_AUTH_SECRET`, `ANTHROPIC_API_KEY` | `env.ts` throws at boot without them. `BETTER_AUTH_SECRET` generated fresh for plot, not shared with any other project — a shared secret lets one app's session cookie replay against another. `ANTHROPIC_API_KEY` and `GOOGLE_MAPS_API_KEY` reused from the same Google/Anthropic accounts groundwork uses |
 | ☑ | `GOOGLE_MAPS_API_KEY` **added to `src/lib/env.ts`** | Was not in the schema; added as required, since address-in is slice 1 and nothing else in the critical path substitutes for it |
-| ☑ | `REPLICATE_API_TOKEN` (already optional in `env.ts`) | Filled from the same Replicate account. Wave 3 still owns picking the actual model |
+| ☑ | `REPLICATE_API_TOKEN` (`.optional()` in `env.ts`, by the degradation contract) | Filled from the same Replicate account. **A runtime production credential — it must be set on Vercel**, since the Look view calls Replicate on demand from `POST /api/projects/:slug/render`. `.optional()` only means a missing key darkens that one view instead of failing boot. Wave 3 still owns picking the actual model |
 | ☑ | `npx drizzle-kit migrate` — applies `drizzle/0001_harsh_demogoblin.sql` | Applied and verified against `information_schema` — all five domain tables present with the right columns. A real write was round-tripped through `/api/auth` and confirmed in the DB, then deleted as test data |
-| ☐ | A Vercel project pointing at `main` | "Deployed" is half of done — still open, first thing slice 0 needs |
+| ☑ | A Vercel project pointing at `main` | "Deployed" is half of done. Live at **https://plot-steel.vercel.app** — no custom domain yet, which is the deliberate no-domain-yet case in `door-and-app.md` |
 
 **One bug found provisioning this**, fixed rather than worked around:
 `BETTER_AUTH_URL: z.string().url().optional()` in `src/lib/env.ts` rejected `KEY=` (empty string)
@@ -40,10 +45,14 @@ one var. `NEXT_PUBLIC_SITE_URL` already goes through `optionalUrl`, which treats
 `BETTER_AUTH_URL` now does too. Same bug likely exists in `modryn-base` and any other project built
 from it before this fix.
 
-No domain is being bought yet. Per `modryn-hq/playbooks/door-and-app.md`, deploy to the generated
-Vercel URL, and keep it out of search **with a global `noindex` in the layout metadata, not with a
-`Disallow`** — `src/app/robots.ts` already allows crawling, and that is correct and deliberate:
-the crawler has to fetch the page to see the directive. Do not "fix" it.
+**No domain yet, deliberately** — `door-and-app.md`'s no-domain case: ship on the generated Vercel
+URL and buy the domain when there is something worth pointing at it. Buying it later moves
+`NEXT_PUBLIC_SITE_URL`, `BETTER_AUTH_URL` and any registered OAuth redirect URI together, which is
+the one-time cost that case accepts up front.
+
+It stays out of search **via a global `noindex` in the layout metadata, not a `Disallow`** —
+`src/app/robots.ts` already allows crawling, and that is correct and deliberate: the crawler has to
+fetch the page to see the directive. Do not "fix" it by disallowing in `robots.txt`.
 
 ---
 

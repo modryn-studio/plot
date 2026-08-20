@@ -203,7 +203,7 @@ back on screen.
 | WI Parcel | lat/lng | no boundary. Imagery-only, user traces. Degrade, say so | no |
 | USGS 3DEP | lat/lng | no slope/aspect. Ask instead of derive | no |
 | USDA SDA / PHZM | lat/lng, postal | no soil / no zone. Planting advice degrades to unfiltered | no |
-| Replicate | photo + mask + prompt | no render. **The takeoff is unaffected** | no |
+| Replicate | photo + mask + prompt | no render. **The takeoff is unaffected** | no — but it is a **runtime production** credential, not a build-time one; `REPLICATE_API_TOKEN` must be set on the deploy |
 
 **Graceful degradation is the rule, and every non-critical source returns `null` rather than
 throwing.** The capture route fans them out with `Promise.allSettled`, so one outage degrades one
@@ -262,7 +262,7 @@ dependency.
 | File storage | **Postgres `bytea`**, served through a gated route | Proven in yard. Bytes are small, per-property, and must be access-controlled. Object storage means a second access-control model | S3/R2 — revisit at multi-property or video |
 | Caching | `Cache-Control: private, immutable` on assets, keyed by content hash | A re-capture changes the hash, so it is a new URL and the stale copy is never requested | |
 | Dev DB | `drizzle-kit generate` + `migrate`, never `push` | House rule; one push makes migrate skip older migrations forever | |
-| Hosting | Vercel + Neon | | |
+| Hosting | Vercel + Neon | Live at **https://plot-steel.vercel.app** since 2026-08-20. No custom domain yet — `door-and-app.md`'s no-domain case: ship on the generated URL, buy the domain when there is something worth pointing at it. `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL` both point there | A custom domain on day one — it would move all three URL vars and any OAuth redirect URI again later anyway |
 | Geography | **Wisconsin at launch** | The parcel DB is WI-only and returns nothing elsewhere rather than guessing. A wrong property line is worse than none: it would be measured off | National with degraded boundaries — the degraded case *is* the product's core claim failing |
 
 ---

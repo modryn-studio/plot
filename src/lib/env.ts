@@ -15,12 +15,16 @@ const schema = z.object({
   // Required for AI routes (streamText, useChat, generateObject).
   ANTHROPIC_API_KEY: z.string().min(1, 'ANTHROPIC_API_KEY is required'),
 
-  // Media generation (video, imagery) for the landing and login surfaces. OPTIONAL, and the
-  // distinction is the whole point: it GENERATES assets, it does not SERVE them. The output is
-  // committed to public/ and shipped as static files, so the running app never reads this key.
-  // Marking it required would fail every production render on a credential production does not
-  // use. Absent = generation is dark, not broken — the same contract as the mail vars below.
-  // Fill it locally, leave it out of the deploy.
+  // THE LOOK VIEW'S RENDERER, AND IT IS A RUNTIME PRODUCTION CREDENTIAL — this deliberately
+  // reverses the boilerplate's comment, which described a build-time asset pipeline plot does not
+  // have. Here the app calls Replicate ON DEMAND from `POST /api/projects/:slug/render` and the
+  // client polls for the result (architecture.md §2, and §6's "renders polled, not queued"). S3 is
+  // a critical-path story. THIS MUST BE SET ON THE DEPLOY or the Look view does not work in
+  // production.
+  // Still `.optional()`, and that is the graceful-degradation contract rather than an oversight:
+  // architecture.md §2 rates Replicate non-critical because a missing render costs the Look view
+  // and nothing else — the takeoff, the plan and the build guide are computed from geometry and
+  // are unaffected. Absent = the Look view is dark and says so, not a boot failure.
   REPLICATE_API_TOKEN: z.string().optional(),
 
   // Neon Postgres (src/lib/db).

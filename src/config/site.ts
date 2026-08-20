@@ -7,5 +7,7 @@ export const site = {
   // Used to build absolute URLs (metadataBase, email images, alert links). Point it at the
   // canonical host — if the deploy 308-redirects apex → www, use www, or every one of those
   // URLs takes a needless redirect hop (found once via an email image returning a 308).
+  // Production is https://plot-steel.vercel.app, set as NEXT_PUBLIC_SITE_URL on Vercel; no custom
+  // domain yet. The localhost fallback is for local dev only.
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
 } as const;
