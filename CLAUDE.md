@@ -32,8 +32,8 @@ table. Everything in `src/` is boilerplate plus the rack.
 | 1 Discovery | passed — `docs/problem-brief.md` |
 | 2 Definition | passed — `docs/spec.md` |
 | 3 Design system | re-locked 2026-08-20 — `docs/design-system.md`, and the reset note below |
-| 4 Architecture | passed — `docs/architecture.md`; schema written, migration generated, **not applied** |
-| 5 Build | **started 2026-08-20** — `docs/build-plan.md` is the slice list and wave table |
+| 4 Architecture | passed — `docs/architecture.md`; schema written and migration applied to a live Neon project |
+| 5 Build | in progress — `docs/build-plan.md` §1 ground checklist closed 2026-08-20; slice 0 (`ground`) not yet started |
 
 ### The design system was reset on 2026-08-20, and this is the one thing to read first
 

@@ -29,7 +29,7 @@ const schema = z.object({
   // Auth (Better Auth, src/lib/auth.ts). Secret is required; sign-in providers are
   // optional and stay dark until their creds land.
   BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required'),
-  BETTER_AUTH_URL: z.string().url().optional(), // production only — dev resolves per request, see auth.ts
+  BETTER_AUTH_URL: optionalUrl, // production only — dev resolves per request, see auth.ts
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
@@ -56,6 +56,11 @@ const schema = z.object({
 
   // ── Add project keys below. Required ones use .min(1) with a message; anything the app can
   // boot without stays .optional() so a half-configured environment still runs. ──
+
+  // The site model's imagery and geometry. ONE key, several APIs — enable each in the Cloud
+  // Console: Geocoding · Maps Static · Solar. Required: address-in is the walking skeleton
+  // (build-plan.md slice 1), and nothing else in the critical path substitutes for it.
+  GOOGLE_MAPS_API_KEY: z.string().min(1, 'GOOGLE_MAPS_API_KEY is required'),
 });
 
 const parsed = schema.safeParse(process.env);

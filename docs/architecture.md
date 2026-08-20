@@ -309,11 +309,10 @@ dependency.
 - [x] Every external service has a named failure mode and a critical/non-critical verdict — §2
 - [x] **Schema written** — `src/lib/db/schema.ts`, and the migration generated as
       `drizzle/0001_harsh_demogoblin.sql` (`generate`, never `push`).
-- [ ] **Migration applied.** Blocked, honestly rather than forgotten: **plot has no `.env.local`
-      and has never been connected to a database.** Provisioning a Neon project and filling
-      `DATABASE_URL`, `BETTER_AUTH_SECRET`, `ANTHROPIC_API_KEY`, `GOOGLE_MAPS_API_KEY` and
-      `REPLICATE_API_TOKEN` is the first thing phase 5 needs, before the walking skeleton can
-      touch anything.
+- [x] **Migration applied.** 2026-08-20 — Neon project `withered-violet-63924132` provisioned,
+      `.env.local` filled (`build-plan.md` §1), `npx drizzle-kit migrate` run, and verified against
+      `information_schema`: all five domain tables present with the right columns. A real write
+      round-tripped through `/api/auth` and was confirmed in the database, then deleted as test data.
 
 ---
 

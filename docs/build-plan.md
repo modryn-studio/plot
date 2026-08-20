@@ -22,16 +22,23 @@ merged in any order.
 
 ## 1. Before slice 0 — the ground that does not exist yet
 
-plot has never been connected to a database. Nothing below can start until these are true.
+**Closed 2026-08-20**, all but one item.
 
 | | What | Why it blocks |
 |---|---|---|
-| ☐ | A Neon project for plot | Every slice writes something |
-| ☐ | `.env.local` with `DATABASE_URL`, `BETTER_AUTH_SECRET`, `ANTHROPIC_API_KEY` | `env.ts` throws at boot without them |
-| ☐ | `GOOGLE_MAPS_API_KEY` **added to `src/lib/env.ts`** | Not in the schema yet — base has no reason to know about it |
-| ☐ | `REPLICATE_API_TOKEN` (already optional in `env.ts`) | Only wave 3 needs it; set it now so a worktree does not stall |
-| ☐ | `npx drizzle-kit migrate` — applies `drizzle/0001_harsh_demogoblin.sql` | The phase-4 gate's one unticked box |
-| ☐ | A Vercel project pointing at `main` | "Deployed" is half of done |
+| ☑ | A Neon project for plot | Every slice writes something. `withered-violet-63924132`, own project — **not** groundwork's, which has real address data on it |
+| ☑ | `.env.local` with `DATABASE_URL`, `BETTER_AUTH_SECRET`, `ANTHROPIC_API_KEY` | `env.ts` throws at boot without them. `BETTER_AUTH_SECRET` generated fresh for plot, not shared with any other project — a shared secret lets one app's session cookie replay against another. `ANTHROPIC_API_KEY` and `GOOGLE_MAPS_API_KEY` reused from the same Google/Anthropic accounts groundwork uses |
+| ☑ | `GOOGLE_MAPS_API_KEY` **added to `src/lib/env.ts`** | Was not in the schema; added as required, since address-in is slice 1 and nothing else in the critical path substitutes for it |
+| ☑ | `REPLICATE_API_TOKEN` (already optional in `env.ts`) | Filled from the same Replicate account. Wave 3 still owns picking the actual model |
+| ☑ | `npx drizzle-kit migrate` — applies `drizzle/0001_harsh_demogoblin.sql` | Applied and verified against `information_schema` — all five domain tables present with the right columns. A real write was round-tripped through `/api/auth` and confirmed in the DB, then deleted as test data |
+| ☐ | A Vercel project pointing at `main` | "Deployed" is half of done — still open, first thing slice 0 needs |
+
+**One bug found provisioning this**, fixed rather than worked around:
+`BETTER_AUTH_URL: z.string().url().optional()` in `src/lib/env.ts` rejected `KEY=` (empty string)
+as an invalid URL — the exact footgun the file's own comment warns about, just not applied to this
+one var. `NEXT_PUBLIC_SITE_URL` already goes through `optionalUrl`, which treats `''` as absent;
+`BETTER_AUTH_URL` now does too. Same bug likely exists in `modryn-base` and any other project built
+from it before this fix.
 
 No domain is being bought yet. Per `modryn-hq/playbooks/door-and-app.md`, deploy to the generated
 Vercel URL, and keep it out of search **with a global `noindex` in the layout metadata, not with a
