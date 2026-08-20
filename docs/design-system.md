@@ -67,7 +67,7 @@ Exactly the four things `design-rules.md` §"What a new project CHANGES" permits
 |---|---|---|
 | `bg` | `#faf8f4` | `#12110f` |
 | `surface` | `#f2eee7` | `#1a1917` |
-| `elevated` | `#fffdf9` | `#232120` |
+| `elevated` | `#ffffff` | `#232120` |
 | `border` | `#e3ddd1` | `#3b3833` |
 | `field` | `#8a8377` | `#8a8880` |
 | `text` | `#1c1a16` | `#ece9e3` |
@@ -79,6 +79,14 @@ relationships are the house's and are unchanged — `surface` recessed, `elevate
 between, `border` deliberately faint on `elevated` because a labelled control is already
 identified by its label.
 
+**`elevated` is pure white in light, and that is the one place the paper cast is deliberately
+dropped** (2026-08-20). Four tokens still carry it, so the raised plane does not have to repeat
+it — a card on aged paper *is* the fresh sheet. The warm `#fffdf9` tinted the card in the same
+direction as the ground beneath it, so the lift measured 1.04 and the plane was doing its work
+almost entirely through the shadow. White measures 1.06 off `bg` and 1.16 off `surface`. Dark was
+proposed as `#222221` and **rejected**: it is a 0.3% luminance move that changes nothing
+measurable and costs the one dark plane that carries warmth.
+
 **This recolour cleared a contrast failure the boilerplate ships with.** `muted on surface`
 measures **4.40 (fails)** in base's palette and **4.64 (AA)** in plot's. That is not why the warm
 values were chosen, but it is worth recording: the constraint that muted must never carry prose
@@ -86,7 +94,7 @@ still holds, and now the metadata itself has margin.
 
 ### Accent: cyanotype
 
-`#22517d` light · `#6ea6d8` dark.
+`#22517d` light · `#79aedd` dark.
 
 **A blueprint is literally a cyanotype**, which earns this blue for a measured-drawing product
 rather than picking it by elimination. It is deep and desaturated: it reads as drawing ink, not as
@@ -96,6 +104,14 @@ The alternatives were genuinely narrow and worth recording so nobody re-opens it
 **not green** — green is this subject's colour (grass, shrubs, the plant palette, the aerial), and
 chrome wearing the plate's ink is the one thing the field-guide standard forbids. **Not amber or
 red** — `warning` and `danger` own those. **Not violet** — the house rule says so outright.
+
+**The dark value moved on 2026-08-20, and not for taste.** `#6ea6d8` put the primary button's
+*pressed* label at **4.38 — under AA**, found by measuring rather than by looking. `accent-foreground`
+is `elevated`, which in dark mode is itself dark, so the house's 97% press mix darkens the fill
+toward its own label. The house formula is not plot's to retune, and raising the cap to 99% clears
+AA only by shrinking the press to a 2.5% move — no press state at all. Lightening the accent, which
+*is* a value a project may change, fixes it properly: rest 6.80, hover 5.17, press **4.80**, press
+still a ~7% step off hover.
 
 **One constraint this creates, recorded now so it is not discovered later:** a marked water area
 on the plan **never renders in the accent hue.** Water is subject, the accent is chrome, and a
@@ -138,13 +154,33 @@ So the full-bleed photograph and the plan viewport are square; the things you ho
 ## 2. Verified, not asserted
 
 `/kitchen-sink` measures every contrast pair in both modes and checks each type token's declared
-value against what the browser rendered. After the recolour, **every pair passes AA except three,
-and all three are deliberate and documented in `design-rules.md`**:
+value against what the browser rendered. **The numbers below are read off that page** (2026-08-20,
+light / dark), not computed alongside it.
 
-- `border on bg` 1.27 / 1.62 — a labelled control is identified by its label, so its edge may be
-  faint at rest and jump on focus.
-- `border-strong on bg` 1.78 / 2.35 and `on elevated` 1.86 / 2.00 — a hover border is a judgement
-  call, not a contrast target. Recorded as *"accepted, not missed"* so nobody fixes it back up.
+**Five pairs sit below their bar, and all five are the same deliberate exemption in
+`design-rules.md`: an edge that is not the only thing identifying its control may be faint.**
+
+- `border on bg` 1.27 / 1.62 and `on elevated` 1.35 / 1.37 — a labelled field or a card. Something
+  inside already says what it is, so the edge is free to be quiet at rest and jump on focus.
+- `border-strong on bg` 1.78 / 2.35 and `on elevated` 1.89 / 2.00 — a hover border is a judgement
+  call, not a contrast target.
+- `rule on elevated` 1.20 / 1.15 — a rule only separates; it is deliberately quieter than `border`.
+
+Held to the bar and clearing it: `field on elevated` **3.75 / 4.51** and `field on bg` 3.54 / 5.31
+— the CodeInput box, where the outline *is* the control and SC 1.4.11 applies.
+
+The tightest real pair in the system, `accent-foreground on accent-active`, now measures
+**10.39 / 4.80**.
+
+**What this section said before 2026-08-20 was wrong twice, and both were this document's fault
+rather than the sink's.** It claimed *"every pair passes AA except three"*. The sink reported five,
+and separately reported `accent-foreground on accent-active` failing dark mode at **4.38** — a pair
+it measures at the right threshold, under a note calling it *"the tightest pair in the system."*
+Nobody read the row. The sentence was written from the recolour's intent instead of from the page
+built to check it, in a section titled *Verified, not asserted*.
+
+**The lesson is not "extend the sink."** It is that a measuring tool nobody opens is worth exactly
+as much as no tool. Every number above was read off the rendered page.
 
 Type steps render exactly as declared (48/52, 36/40, 28/32, 22/28, 18/28).
 

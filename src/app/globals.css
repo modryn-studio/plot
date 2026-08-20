@@ -35,7 +35,14 @@
   /* Color roles — light defaults; .dark overrides below */
   --color-bg: #faf8f4; /* page background */
   --color-surface: #f2eee7; /* panels, cards */
-  --color-elevated: #fffdf9; /* raised cards, popovers, modals */
+  /* PURE WHITE, NOT A WARM OFF-WHITE (Luke, 2026-08-20; Rams concurred with numbers).
+     The paper cast is carried by bg, surface, border and rule - four tokens, all still warm - so
+     the raised plane does not need to repeat it. A card on aged paper IS the fresh sheet: the
+     whitest thing in the frame. #fffdf9 tinted the card in the SAME direction as the ground it sits
+     on, which is why the light lift measured only 1.04; white takes it to 1.06 off bg and 1.16 off
+     surface, so the plane reads as raised through VALUE rather than leaning on the shadow alone.
+     Every pair improved and none regressed - see docs/design-system.md §2. */
+  --color-elevated: #ffffff; /* raised cards, popovers, modals */
   --color-border: #e3ddd1; /* subtle borders, dividers */
   --color-text: #1c1a16; /* body text */
   --color-muted: #6f6a61; /* secondary text, placeholders */
@@ -107,9 +114,14 @@
      Mixed off accent-hover rather than accent directly, and capped at 97%, because a DARK-mode
      label reads accent-foreground = elevated, which is itself DARK - darkening the fill further
      moves the two toward each other and COSTS contrast rather than buying it. 97% was measured,
-     not guessed: at 90% the dark label dropped to 3.88, under AA; 97% holds 4.63 with real margin
-     while still landing a step distinguishable from hover (light 6.94, dark 4.63; step-vs-hover
-     ~1.07 both modes - small on purpose, this only has to read as A step, not a leap). */
+     not guessed: at 90% the dark label dropped to 3.88, under AA.
+     THE 97% IS THE HOUSE'S AND IS NOT RETUNED HERE. It was measured against the boilerplate's
+     elevated (#1e1e1e); plot's is lighter (#232120), which moves the dark label and the darkened
+     fill toward each other and cost the press state its AA margin - measured 2026-08-20 at 4.38,
+     under 4.5, while the comment here still claimed 4.63. The honest fix was the ACCENT VALUE,
+     which a project may change, not this constant, which it may not: raising the cap to 99% does
+     clear AA but shrinks the press to a 2.5% move, which is no press state at all. See the dark
+     accent below. Now measures light 10.40, dark 4.80. */
   --color-accent-active: color-mix(in oklab, var(--color-accent-hover) 97%, black);
   /* 15%, Luke's own call rather than a match to run-trading@v2's number - "run-trading@v2's login
      page actually doesn't have this consistent, not a problem because we are only iterating the
@@ -314,7 +326,12 @@
   --color-field: #8a8880;
   --color-text: #ece9e3;
   --color-muted: #918c84;
-  --color-accent: #6ea6d8;
+  /* ONE STEP LIGHTER THAN #6ea6d8 (2026-08-20). Not taste - the primary button's PRESSED label
+     was failing AA at 4.38. accent-foreground is `elevated`, which in dark mode is itself dark, so
+     the 97% press mix darkens the fill toward its own label. Lightening the accent moves them
+     apart and restores the margin: rest 6.80, hover 5.17, press 4.80, with the press still a ~7%
+     step off hover. Recomputed, not estimated. */
+  --color-accent: #79aedd;
   /* No --color-accent-foreground, --color-accent-hover, --color-border-strong or --color-pressed
      here on purpose: each is derived from --color-accent / --color-elevated / --color-bg above, all
      of which this block redefines, so every one re-derives itself. --color-icon-press used to be

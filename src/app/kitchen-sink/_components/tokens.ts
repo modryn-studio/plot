@@ -53,7 +53,7 @@ export const CONTRAST_PAIRS: ContrastPair[] = [
   { label: 'text on elevated', probe: 'text-text bg-elevated', threshold: 4.5 },
   { label: 'muted on bg', probe: 'text-muted bg-bg', threshold: 4.5, note: 'the one that usually fails' },
   { label: 'muted on surface', probe: 'text-muted bg-surface', threshold: 4.5 },
-  { label: 'accent-foreground on accent', probe: 'text-accent-foreground bg-accent', threshold: 4.5, note: 'derived by contrast-color()' },
+  { label: 'accent-foreground on accent', probe: 'text-accent-foreground bg-accent', threshold: 4.5, note: 'the label on every primary button - this token IS --color-elevated, so it reverses by mode for free' },
   { label: 'accent on bg', probe: 'text-accent bg-bg', threshold: 4.5, note: 'links and inline accent text' },
   { label: 'accent-foreground on accent-hover', probe: 'text-accent-foreground bg-accent-hover', threshold: 4.5, note: 'the label must survive the hover' },
   { label: 'accent-foreground on accent-active', probe: 'text-accent-foreground bg-accent-active', threshold: 4.5, note: 'the tightest pair in the system - a dark-mode label reading elevated is itself dark, so darkening the fill further COSTS contrast' },
