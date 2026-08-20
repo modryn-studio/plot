@@ -63,6 +63,10 @@ Report PASS / MISSING with file paths.
 - [ ] The public pages a shared link can reach are the ones actually intended to be public. Confirm
       everything else stays behind auth, `noindex`, or whatever gate this project uses to keep
       internal surfaces dark.
+- [ ] `src/app/kitchen-sink/` is deleted, or moved behind `require-admin`. It is deliberately left
+      reachable during the build so the design system can be checked on a real phone, and it is a
+      route that shows a stranger the seams of a product that is trying to look finished. Nothing
+      imports it, so deleting the directory is the entire job.
 
 ## Step 2: the posting sequence (only once the gate is PASS)
 
