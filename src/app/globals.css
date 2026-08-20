@@ -35,14 +35,22 @@
   /* Color roles — light defaults; .dark overrides below */
   --color-bg: #faf8f4; /* page background */
   --color-surface: #f2eee7; /* panels, cards */
-  /* PURE WHITE, NOT A WARM OFF-WHITE (Luke, 2026-08-20; Rams concurred with numbers).
-     The paper cast is carried by bg, surface, border and rule - four tokens, all still warm - so
-     the raised plane does not need to repeat it. A card on aged paper IS the fresh sheet: the
-     whitest thing in the frame. #fffdf9 tinted the card in the SAME direction as the ground it sits
-     on, which is why the light lift measured only 1.04; white takes it to 1.06 off bg and 1.16 off
-     surface, so the plane reads as raised through VALUE rather than leaning on the shadow alone.
-     Every pair improved and none regressed - see docs/design-system.md §2. */
-  --color-elevated: #ffffff; /* raised cards, popovers, modals */
+  /* NEAR-WHITE ON THE SAME HUE AS bg, NOT PURE WHITE (Luke caught this, 2026-08-20 - shipped as
+     #ffffff for about an hour and read as too bright the moment he looked at it).
+     THE FIRST PASS ANSWERED THE WRONG QUESTION. WCAG contrast ratio is relative LUMINANCE only -
+     it cannot see hue or chroma, so it reported #ffffff as a small, uniformly positive move (every
+     pair +0.02 to +0.16) while missing the thing that actually changed: bg carries a warm cast
+     (OKLCH ~84.6deg hue, C 0.0057) and pure white carries none (C 0). That is a chroma-to-zero
+     step, not a lightness step, and it reads as a different material dropped onto warm paper -
+     measured as a 2.5x jump in CIEDE2000 perceptual distance from bg (1.00 to 2.47) against only a
+     1.6% move in WCAG ratio (1.044 to 1.061) across the ENTIRE candidate range from fffdf9 to
+     ffffff. The ratio was structurally incapable of catching this.
+     #fffefc IS THE FIX: half bg's chroma (0.00285) and 84.56deg hue, indistinguishable from bg's
+     84.57deg - the only 8-bit step in the ffxxxx range that stays on the paper's hue line (fffefb
+     drifts +6.9deg, fffefd drifts -16.8deg). Contrast still improves on every pair vs the original
+     #fffdf9 (accent-foreground on accent 8.13 -> 8.20, muted 5.29 -> 5.33), just without paying for
+     it in hue. Reads raised through LIGHTNESS, not through switching materials. */
+  --color-elevated: #fffefc; /* raised cards, popovers, modals */
   --color-border: #e3ddd1; /* subtle borders, dividers */
   --color-text: #1c1a16; /* body text */
   --color-muted: #6f6a61; /* secondary text, placeholders */
