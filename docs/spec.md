@@ -26,6 +26,53 @@ Narrative: [`walkthrough.md`](walkthrough.md)
 
 ---
 
+## 1b. Where this is used, and what that costs
+
+**Added 2026-08-20.** The design system had been asserting this use context for three days while
+this file never stated it — so the contrast floors, the target sizes and the press feedback were
+all resting on an assumption with nothing behind it. Anything justified only by taste gets traded
+away by a later session tidying up. Stated here, it has to be argued with instead.
+
+**Half of this product is used outdoors, standing on the ground being measured.**
+
+| Condition | What it costs |
+|---|---|
+| **Direct sunlight** | Screen contrast collapses. A ratio that reads fine at a desk is a grey rectangle at noon. |
+| **Gloves, or wet and dirty hands** | Touch accuracy drops and a fingertip covers a small control completely. |
+| **One-handed** | The other hand is holding a tape, a phone, a shovel, or the corner of something. |
+| **Arm's length, propped** | The build guide is read from further away than a desk screen ever is. |
+| **Weak rural signal** | Portage is not a dead zone, but a back yard behind a house is not a desk either. |
+
+The other half — the address, the site check, the takeoff review — happens at a desk, unhurried.
+**Neither half is the "real" one**, and a decision that suits one at the other's expense is the
+failure this section exists to catch.
+
+### What follows from it, and these are binding
+
+- `THE SYSTEM SHALL meet WCAG 2.2 AA contrast for all body text in both themes, measured on the
+  rendered pair rather than asserted.`
+- `THE SYSTEM SHALL give every interactive control a hit target of at least 44px in its smaller
+  dimension, whether or not its visible chip is that large.`
+- `WHEN a control is pressed, THE SYSTEM SHALL acknowledge within 100ms with a change that
+  survives the finger covering the control.`
+- `THE SYSTEM SHALL set the build guide's step text at no less than 18px.`
+- `THE SYSTEM SHALL keep every primary action on a screen reachable without a second hand — no
+  drag-required, hover-required or two-finger interaction on the critical path.`
+- `WHERE a screen is used outdoors (Look, Plan, Build), THE SYSTEM SHALL remain usable at the
+  smallest supported viewport without horizontal scrolling.`
+- `IF a network request fails outdoors, THEN THE SYSTEM SHALL preserve any work already entered
+  and say what failed, rather than discarding it.`
+
+**Offline is explicitly NOT promised in v1** — see §4. The last criterion is the honest subset:
+not "works with no signal", but "does not lose your morning when the signal drops." A real offline
+mode is a sync model and a conflict story, and that is a different product decision.
+
+**The three currently-failing contrast pairs are not exceptions to the first criterion.** They are
+`border` and `border-strong`, which are non-text boundaries with a documented house decision
+behind them ([`design-system.md`](design-system.md) §2). Body text has no exceptions.
+
+---
+
 ## 2. The critical path
 
 **Three destinations. The project is one screen with four views** — adapted from GrowVeg's
@@ -329,6 +376,11 @@ Edge cases:
 - **Lead generation or contractor referrals** — never. This is the incentive that ruined the
   incumbents.
 - **A native mobile app** — the web app must work on a phone outdoors; that is not the same thing.
+- **Offline mode.** Not "we forgot the yard has bad signal" — §1b states the condition and takes
+  the honest subset of it: work already entered survives a failed request and the failure says
+  what it was. Genuine offline is a sync model, a conflict story and a local store, and committing
+  to it here would be committing to all three. Revisit when a real owner loses real work to signal
+  rather than before.
 
 **Explicitly deferred, revisit when:** a real owner completes a real project end-to-end and
 returns to start a second one.

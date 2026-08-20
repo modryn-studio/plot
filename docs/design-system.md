@@ -154,9 +154,12 @@ Type steps render exactly as declared (48/52, 36/40, 28/32, 22/28, 18/28).
 
 - **The rack has never been opened on a real phone outdoors**, which is the condition this whole
   system is designed against. That is a deploy away, and the rack ships to production for it.
-- **`spec.md` does not state that condition.** Sunlight, gloves, one-handed use and offline appear
-  nowhere in it, so the design system has been asserting a use context its own spec does not
-  carry. Close that before someone trades the contrast floors and target sizes away for tidiness.
+- ~~`spec.md` does not state that condition.~~ **Closed 2026-08-20.** It is now
+  [`spec.md`](spec.md) §1b, with seven binding EARS criteria behind it — the AA floor, the 44px
+  hit target, the 100ms press that survives an occluding finger, the 18px build-guide step, the
+  one-handed rule, no horizontal scroll outdoors, and preserving entered work when a request
+  fails. **The contrast floors and target sizes in this file are no longer taste**; they are the
+  design system's answer to a stated requirement, and moving one means arguing with the spec.
 - **No product components exist yet**, deliberately. The eight built on 2026-08-17 were made ahead
   of any screen that needed them and are gone (recoverable at `049cc4c`). Rebuild against the
   house system when a real screen asks — and per house rule, **a new primitive means a new sink
