@@ -27,6 +27,8 @@ The blueprint artifacts live in [`docs/`](docs/) and are the source of truth, no
 | [`docs/spec.md`](docs/spec.md) | Phase 2 — **what v1 is.** Point agents here, not at your memory of it |
 | [`docs/walkthrough.md`](docs/walkthrough.md) | The same spec as a story, for picturing the flow |
 | [`docs/design-system.md`](docs/design-system.md) | Phase 3 — every visual rule, decided once |
+| [`docs/architecture.md`](docs/architecture.md) | Phase 4 — where every piece of state lives, and why |
+| [`docs/build-plan.md`](docs/build-plan.md) | Phase 5 — the slices, the order, and the wave table |
 | [`docs/recon.md`](docs/recon.md) | The competitive read, and why the category fails |
 | [`docs/reference/`](docs/reference/) | Per-product teardowns from live drives |
 
