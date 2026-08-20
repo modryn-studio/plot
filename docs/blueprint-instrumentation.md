@@ -1,4 +1,4 @@
-# Blueprint instrumentation — <build name>
+# Blueprint instrumentation — plot
 
 > **The blueprint is the product. This build is the beta. The friction log is the analytics.**
 >
@@ -7,9 +7,9 @@
 > retroactively — at the end you'll remember the last 10% and rationalize the rest.
 > So instrument it the same way phase 8 instruments a product.
 
-**Build:** <name>
-**Blueprint version being tested:** `playbooks/web-app-blueprint.md` @ <commit>
-**Started:** <date>
+**Build:** plot — a measured property model for a DIY homeowner
+**Blueprint version being tested:** `modryn-hq@v4:playbooks/web-app-blueprint.md` @ `ad4b063`
+**Started:** 2026-08-17 · **This file filled in:** 2026-08-20, late — see Q7
 **Retro due:** at phase 7 gate — before the next build starts, not "sometime"
 
 ---
@@ -25,7 +25,10 @@ Questions written *after* a build are answers in disguise. Commit these first.
 | Q3 | Did the EARS acceptance criteria survive contact with real code? | They're the anti-drift mechanism; if they're ignored they're overhead | |
 | Q4 | How long did each phase actually take vs. expectation? | Wrong weighting is why people skip phases | |
 | Q5 | Which gate did I most want to skip, and what happened? | The gate you want to skip is the one carrying the most weight | |
-| Q6 | <your own> | | |
+| Q6 | Did the design system survive first contact with a house-rules update mid-build? | Locked on 08-17 against the template, reset on 08-20 against `design-rules.md` which did not exist at phase 3. The blueprint assumes house style is stable across a build. It was not. | |
+| Q7 | **What did filling this file in at phase 4 instead of phase 1 cost?** | The blueprint says write these first and this one was written three phases late, which makes Q1-Q5 partly retrospective. That is itself a finding about whether the instruction is followable. | |
+| Q8 | Did a three-day gap mid-build lose more than the docs could restore? | Work stopped 08-17 and resumed 08-20 having forgotten most of it. The docs are supposed to be the anchor; measure whether they actually were. | |
+| Q9 | Was phase 4 cheaper because another repo had already built the same data layer? | `yard` shipped parcel/imagery/solar/soil/climate first. If prior art is what made architecture fast, the blueprint should say so rather than assuming a blank page. | |
 
 **Rule:** do not add questions after phase 5. Late questions are conclusions looking for support.
 
@@ -67,12 +70,16 @@ Format, if writing free-form entries here instead: `<date> · <phase> · <what h
 
 Fill in as each phase closes. Takes two minutes.
 
+**Backfilled from git on 2026-08-20, not from memory.** No tags were cut at the time, which is
+its own friction entry: the template says tag every gate and nothing in the working session
+prompted it. Dates are commit dates.
+
 | Phase | Started | Closed | Felt like | Gate passed cleanly? |
 |---|---|---|---|---|
-| 1 Discovery | | | | |
-| 2 Definition | | | | |
-| 3 Design system | | | | |
-| 4 Architecture | | | | |
+| 1 Discovery | 2026-08-17 | 2026-08-17 | Fast, because the recon did the work. Driving three live competitors and reading the professional tools produced the spin rather than a brainstorm producing it. | Yes, but the FIRST spin was wrong and got replaced same day: "add build sequencing to the picture" was a real answer on a fake foundation. |
+| 2 Definition | 2026-08-17 | 2026-08-17 | The longest thinking, the least typing. Rewritten once mid-phase when the direction changed from project-rooted to property-rooted. | Yes, 5/5, after the data-source decisions moved from open to proven. |
+| 3 Design system | 2026-08-17 | **2026-08-20** | The one that went wrong. Locked once against the template, found to violate house rules that appeared three days later, deleted, and re-locked against `design-rules.md`. | Eventually. Not on the first attempt, and the first attempt LOOKED clean: lint green, typecheck green, contrast gate ticked against a check that had never run. |
+| 4 Architecture | 2026-08-20 | 2026-08-20 | Cheap, and suspiciously so. `yard` had already built the data layer, so most decisions were "read the working one" rather than "decide". | 5/6. Migration generated, not applied: no database provisioned yet. |
 | 5 Build | | | | |
 | 6 Hardening | | | | |
 | 7 Launch | | | | |

@@ -263,6 +263,14 @@ elements is not a yard. Only a logged-in read surfaces that.
 - [x] Arcadium 3D — **authed: workspace, project creation, 3D editor, full tool and view model**
       → [`reference/arcadium3d.md`](reference/arcadium3d.md)
 - [x] Cedreo — landing + pricing only
+- [x] **Market complaints** → [`reference/market-complaints.md`](reference/market-complaints.md),
+      ported from `modryn-builds/yard` 2026-08-20. A different class of evidence from everything
+      else here: not a teardown of what a product does, but **complaints from people who paid and
+      were disappointed**, gathered from published reviews. Three land on decisions plot already
+      made, one lands on a gap (seasonality — see `spec.md` §4), and the worst one, *"the scale is
+      wrong"*, is the exact failure plot is built to be structurally incapable of: a bed that
+      looks right in a render measuring 40% small on the ground, because a photograph never knew
+      how many feet across the yard was.
 - [x] **Phase 1 artifact — [`problem-brief.md`](problem-brief.md)**, rewritten against the
       corrected direction. Gate question still Luke's to answer.
 - [x] **PRIMARY — professional-tool IA recon, first pass**: PRO Landscape+ and VizTerra read in

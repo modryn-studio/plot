@@ -135,9 +135,22 @@ Edge cases:
 > wrong, so that I trust what comes out of it later.
 
 - `THE SYSTEM SHALL derive and display, without asking the user: hardiness zone, slope grade,
-  slope aspect, and monthly sun exposure.`
+  slope aspect, monthly sun exposure, and soil drainage class.`
 - `THE SYSTEM SHALL label each derived value with its confidence and its source.`
 - `THE SYSTEM SHALL label modelled sun as modelled and SHALL NOT present it as measured.`
+- `THE SYSTEM SHALL state that the soil survey describes a map unit rather than a test of this
+  yard, wherever soil is shown.`
+
+> **Soil was added 2026-08-20, and it is the highest-value fact on this screen.** It was in the
+> architecture as a data source and consumed by no story, which meant plot fetched it and did
+> nothing with it. `modryn-builds/yard` measured it on this exact property and it **overturned a
+> stated assumption**: the ground is Plainfield loamy fine sand, excessively drained, negligible
+> runoff, ~13 in/hr infiltration. Standing water is close to the *least* likely failure mode here
+> and drought is the real constraint — the opposite of the prior that had been imported from the
+> average yard. One free keyless API call inverted it, and **every planting decision downstream
+> would otherwise have been aimed at the wrong problem.** See
+> [`reference/market-complaints.md`](reference/market-complaints.md) for why guessing this is the
+> category's second-most-cited failure.
 - `WHEN the user edits a derived value, THE SYSTEM SHALL retain the original and mark the value
   as user-corrected.`
 - `THE SYSTEM SHALL require the user to mark where water collects or runs, and SHALL NOT derive
@@ -195,6 +208,11 @@ Edge cases:
 - `THE SYSTEM SHALL require a surface material and a depth for any built surface.`
 - `IF a project area lies downhill of a marked water area, THEN THE SYSTEM SHALL display a
   drainage warning naming that area.`
+- `WHERE the derived soil drainage class contradicts a marked water area, THE SYSTEM SHALL say so
+  rather than suppressing either — an excessively-drained soil with standing water on it is a
+  real signal (compaction, a hardpan, a downspout) and not a contradiction to resolve silently.`
+- `IF the derived soil is excessively drained, THEN THE SYSTEM SHALL surface drought rather than
+  drainage as the planting constraint for that project.`
 - `THE SYSTEM SHALL autosave within 5 seconds of a change and display the last-saved time.`
 - `THE SYSTEM SHALL keep the Look and Plan views of a project referring to one project record.`
 
@@ -353,7 +371,15 @@ Edge cases:
   and takes water as a marked area. Surface modelling is its own project.
 - **Deriving water flow from contours** — possible with 3DEP, not v1.
 - **Irrigation design** · **lighting design** — later.
-- **Seasonal timeline scrubber** — needs in-ground dates on every plant.
+- **Seasonal timeline scrubber** — needs in-ground dates on every plant. **Flagged 2026-08-20 as
+  the one deferral with a documented user complaint against it**
+  ([`reference/market-complaints.md`](reference/market-complaints.md) #3): the category's renders
+  show a June plant and a September plant both in peak flower, because an image model has no model
+  of time, and *"a planting plan that cannot say what the bed looks like in February is not
+  finished."* Plot inherits that exposure the moment it renders a planting. **The v1 mitigation is
+  honesty rather than a feature**: the standing notice already says a generated image is an
+  illustration and not a plan, and the plant palette states mature size rather than a bloom photo.
+  Revisit the moment a planting takeoff is something someone buys against.
 - **A plant database at professional depth** — v1 ships a curated palette.
 - **Companion planting and plant combinations** — later.
 - **Live regional pricing** — v1 gives quantities, not dollars.
@@ -515,7 +541,30 @@ returns to start a second one.
 | Guide grounding source | university extension publications *(leaning: free, regional, citable)* | before S8 | — |
 | Permits and easements | out · surface as a warning · full lookup | before phase 4 | — leaning **surface as a warning**, since `yard/docs/discovery.md` names easements as one of the four things that sink amateur projects, and we already hold the parcel boundary |
 | Does signup gate the base plan | before · after | before slice 1 | — |
-| Geography at launch | Wisconsin only *(parcel constraint)* · national with degraded boundaries | before slice 1 | — |
+| Geography at launch | — | — | **Wisconsin only. Decided 2026-08-20** (Luke), see below. |
+
+### Wisconsin only, for v1 — decided 2026-08-20
+
+**The technical cost of going national is close to zero, and that is not the reason.** Everything
+except one source is already national: imagery, sun, slope, aspect, soil, hardiness zone. Only the
+**parcel boundary** is Wisconsin-bound, because no free national parcel service exists — it is
+3,000+ counties, and the commercial option is a paid licence.
+
+The fallback also has to be built regardless: S1 already requires that a property with no parcel
+coverage falls back to imagery plus a manual trace, because even inside Wisconsin the service can
+miss on a rural lot.
+
+**So the cost is the promise, not the code.** A national app whose single best feature — *we
+already know your property lines* — works in one state would disappoint most of the people who
+try it. That is a worse first impression than a smaller honest claim, and it damages the exact
+thing this product sells, which is that its numbers can be trusted.
+
+**v1 is Wisconsin, dogfooded on Luke's own lot**, where every source resolves and the whole chain
+can be judged end to end. National becomes a decision made later against real usage, and the trace
+tool built for the fallback is most of the answer when it comes.
+
+`THE SYSTEM SHALL state plainly, before an address is entered, that lot lines are available for
+Wisconsin only.` Discovering it after typing your address is the version that reads as broken.
 
 ---
 
