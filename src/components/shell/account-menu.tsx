@@ -147,7 +147,19 @@ export function AccountMenu({ user }: { user?: AccountUser | null }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="hover:bg-selected flex min-h-11 w-full items-center gap-3 rounded-sm px-2 py-2 transition-colors"
+        /* THE SAME BOX AS THE MENU ITEMS BELOW IT: `h-10 gap-3 px-3` (2026-08-20). This was
+           `min-h-11 gap-3 px-2 py-2` and rendered 48px, because a 32px avatar plus `py-2` is 48 and
+           cleared the `min-h-11` floor - so the height came from the avatar rather than from a
+           decision, and the trigger disagreed with the four rows it opens on both height and inset.
+           Found in `run-rebuild`, where the same trigger sat 8px taller than the sidebar's nav rows
+           (Luke: "they should be exactly the same size for consistency"). That project has nav rows
+           to be consistent WITH; this one has its own menu items, and the answer is the same either
+           way - one rail, one row box.
+           `min-h-11` (44px) goes with it, and that is the real cost: 44 is the touch-target floor
+           and 40 is under it. The menu items this now matches were always `min-h-10`, so the rail
+           never met that floor; a single taller row bought it for one row out of five and cost the
+           column its rhythm. If 44 matters it is a decision for the whole rail. */
+        className="hover:bg-selected flex h-10 w-full items-center gap-3 rounded-sm px-3 transition-colors"
       >
         {/* The provider's avatar when there is one, the initial when there is not. A plain <img>,
             not next/image: the host is whatever the auth provider uses, which next/image would need
@@ -156,7 +168,9 @@ export function AccountMenu({ user }: { user?: AccountUser | null }) {
             on hover it is the same fill as the row behind it and its edge disappears - a same-on-same
             disc reads as a gap rather than as a face. The hairline keeps it findable in every state
             without giving it a second, competing fill. */}
-        <span className="bg-selected border-border text-caption text-muted flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border">
+        {/* 28px, DOWN FROM 32 (2026-08-20). A 32px disc in a 40px row leaves 4px above and below
+            and reads as wedged in; 28 leaves 6. */}
+        <span className="bg-selected border-border text-caption text-muted flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element -- see above
             <img
