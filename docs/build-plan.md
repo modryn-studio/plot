@@ -204,7 +204,7 @@ Feeds `blueprint-instrumentation.md` at the phase 7 retro.
 
 | Slice | Merged | SHA | Notes |
 |---|---|---|---|
-| | | | |
+| 0 `ground` | 2026-08-21 | `cb575c8` | `/` 307s to `/login` when signed out; renders a real authUser row read through drizzle plus the deployed commit SHA when signed in. No estimate was set to measure against -- this is the first entry. |
 
 ---
 
