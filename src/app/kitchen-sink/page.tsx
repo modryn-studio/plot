@@ -51,12 +51,12 @@ export default function KitchenSinkPage() {
     <SinkShell>
       <div className="mx-auto max-w-4xl px-6 pb-24">
         <header className="pb-12">
-          <h1 className="text-h1 text-balance">Kitchen sink</h1>
-          <p className="text-body-lg mt-4 max-w-2xl text-pretty">
+          <h1 className="text-title1 text-balance">Kitchen sink</h1>
+          <p className="text-subtitle1 mt-4 max-w-2xl text-pretty">
             Every token and every component, in every state, in both modes. Recolour the system and
             check this page before building a screen: it measures what lint cannot see.
           </p>
-          <p className="text-small mt-6 max-w-2xl text-pretty">
+          <p className="text-body1 mt-6 max-w-2xl text-pretty">
             It is the floor, not the inventory. Every primitive added to the project gets a section
             here in the same commit, or this page quietly starts claiming to be the whole system
             while showing part of it.

@@ -102,8 +102,8 @@ export default async function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-12">
       <header className="mb-10">
-        <h1 className="text-h2">Admin</h1>
-        <p className="text-small text-muted mt-1">All-time. Signed in as {admin.email}.</p>
+        <h1 className="text-title2">Admin</h1>
+        <p className="text-body1 text-muted mt-1">All-time. Signed in as {admin.email}.</p>
       </header>
 
       {/* THE HEADLINE NUMBERS. Replace these with the metrics that actually decide whether this
@@ -115,8 +115,8 @@ export default async function AdminPage() {
       </section>
 
       <section className={`${CARD} mb-10 p-6`}>
-        <h2 className="text-h3 mb-1">Funnel</h2>
-        <p className="text-small text-muted mb-4">Unique visitors per step.</p>
+        <h2 className="text-title3 mb-1">Funnel</h2>
+        <p className="text-body1 text-muted mb-4">Unique visitors per step.</p>
         <Row label="Saw login" value={s.funnel.sawLogin} />
         <Row
           label="Started signup"
@@ -128,14 +128,14 @@ export default async function AdminPage() {
           value={s.funnel.signedUp}
           hint={pct(s.funnel.signedUp, s.funnel.startedSignup)}
         />
-        <p className="text-caption text-muted mt-4">
+        <p className="text-subtitle4 text-muted mt-4">
           Steps read zero until their screens exist and are instrumented. Add product steps here as
           you add events. See src/lib/analytics.ts.
         </p>
       </section>
 
       <section className={`${CARD} mb-10 p-6`}>
-        <h2 className="text-h3 mb-4">Sign-in method</h2>
+        <h2 className="text-title3 mb-4">Sign-in method</h2>
         {s.methods.length === 0 ? (
           <Empty />
         ) : (
@@ -144,16 +144,16 @@ export default async function AdminPage() {
       </section>
 
       <section className={`${CARD} mb-10 p-6`}>
-        <h2 className="text-h3 mb-1">Waitlist</h2>
-        <p className="text-small text-muted mb-4">Email capture from the pre-launch page.</p>
+        <h2 className="text-title3 mb-1">Waitlist</h2>
+        <p className="text-body1 text-muted mb-4">Email capture from the pre-launch page.</p>
         {s.waitlist.length === 0 ? (
           <Empty />
         ) : (
           <ul className="divide-border divide-y">
             {s.waitlist.map((w) => (
               <li key={w.email} className="flex items-center justify-between gap-4 py-2">
-                <span className="text-body truncate">{w.email}</span>
-                <span className="text-small text-muted shrink-0">
+                <span className="text-body0 truncate">{w.email}</span>
+                <span className="text-body1 text-muted shrink-0">
                   {new Date(w.createdAt).toLocaleString()}
                 </span>
               </li>
@@ -163,15 +163,15 @@ export default async function AdminPage() {
       </section>
 
       <section className={`${CARD} mb-10 p-6`}>
-        <h2 className="text-h3 mb-4">Recent signups</h2>
+        <h2 className="text-title3 mb-4">Recent signups</h2>
         {s.signups.length === 0 ? (
           <Empty />
         ) : (
           <ul className="divide-border divide-y">
             {s.signups.map((u) => (
               <li key={u.id} className="flex items-center justify-between gap-4 py-2">
-                <span className="text-body truncate">{u.email}</span>
-                <span className="text-small text-muted shrink-0">
+                <span className="text-body0 truncate">{u.email}</span>
+                <span className="text-body1 text-muted shrink-0">
                   {new Date(u.createdAt).toLocaleString()}
                 </span>
               </li>
@@ -181,19 +181,19 @@ export default async function AdminPage() {
       </section>
 
       <section className={`${CARD} p-6`}>
-        <h2 className="text-h3 mb-1">Recent activity</h2>
-        <p className="text-small text-muted mb-4">Last 50 tracked events.</p>
+        <h2 className="text-title3 mb-1">Recent activity</h2>
+        <p className="text-body1 text-muted mb-4">Last 50 tracked events.</p>
         {s.recent.length === 0 ? (
           <Empty />
         ) : (
           <ul className="divide-border divide-y">
             {s.recent.map((e, i) => (
               <li key={i} className="flex items-center justify-between gap-4 py-2">
-                <span className="text-body">
+                <span className="text-body0">
                   {e.name}
                   {e.path ? <span className="text-muted"> · {e.path}</span> : null}
                 </span>
-                <span className="text-small text-muted shrink-0">
+                <span className="text-body1 text-muted shrink-0">
                   {new Date(e.createdAt).toLocaleString()}
                 </span>
               </li>
@@ -208,9 +208,9 @@ export default async function AdminPage() {
 function Stat({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
     <div className={`${CARD} p-5`}>
-      <p className="text-caption text-muted uppercase">{label}</p>
-      <p className="text-h1 mt-1 tabular-nums">{value.toLocaleString()}</p>
-      {hint ? <p className="text-small text-muted mt-1">{hint}</p> : null}
+      <p className="text-subtitle4 text-muted uppercase">{label}</p>
+      <p className="text-title1 mt-1 tabular-nums">{value.toLocaleString()}</p>
+      {hint ? <p className="text-body1 text-muted mt-1">{hint}</p> : null}
     </div>
   );
 }
@@ -219,10 +219,12 @@ function Stat({ label, value, hint }: { label: string; value: number; hint?: str
 function Row({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
     <div className="border-border flex items-baseline justify-between gap-4 border-b py-2 last:border-b-0">
-      <span className="text-body">{label}</span>
+      <span className="text-body0">{label}</span>
       <span className="flex items-baseline gap-3">
-        {hint ? <span className="text-small text-muted tabular-nums">{hint}</span> : null}
-        <span className="text-body-lg tabular-nums">
+        {hint ? <span className="text-body1 text-muted tabular-nums">{hint}</span> : null}
+        {/* numeric2, not a body role: a stat is a readout, and the numeric roles carry the
+            weight and the negative tracking that make a column of figures scan as figures. */}
+        <span className="text-numeric2 tabular-nums">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
       </span>
@@ -231,5 +233,5 @@ function Row({ label, value, hint }: { label: string; value: number | string; hi
 }
 
 function Empty() {
-  return <p className="text-small text-muted">Nothing yet.</p>;
+  return <p className="text-body1 text-muted">Nothing yet.</p>;
 }

@@ -17,7 +17,7 @@
      and that is plot's brand, not a shortfall: a drafting product reads better squarer.
    - No new tokens. Both scrim passes read `--color-bg`, which is what `bg-bg` compiles to anyway,
      so the ground under the photograph is literally the page's own ground.
-   - `muted` stays metadata. The terms line is `text-small` ink, not muted prose.
+   - `muted` stays metadata. The terms line is `text-body1` ink, not muted prose.
 
    EMAIL ONLY, FOR NOW. The Google button is COMMENTED OUT rather than deleted (Luke's call,
    2026-08-20): `GOOGLE_CLIENT_ID` is present-but-empty in `.env.local`, so the button that used to
@@ -332,14 +332,14 @@ export function Login() {
               `tracking-widest` is Tailwind's own scale step, not an invented token: plot clears no
               namespaces, so the stock tracking utilities are live and a wordmark does not earn a
               token of its own until a second screen needs one. */}
-          <p className="text-body font-medium tracking-widest uppercase">{site.name}</p>
+          <p className="text-body0-medium tracking-widest uppercase">{site.name}</p>
 
           {/* THE CLAIM IS THE <h1>, NOT THE WORDMARK. The document is already titled "Plot" by the
               layout's metadata, so the page's one heading should be what the page is ABOUT. It is
               also set larger than the mark above it, which is the reference's best move: the
               message outranks the identity on the only screen a stranger ever sees.
               `text-balance` so the wrap is even rather than leaving one orphaned word. */}
-          <h1 className="text-h1 md:text-display max-w-md text-center text-balance">
+          <h1 className="text-title1 md:text-title0 max-w-md text-center text-balance">
             Know your property before you build on it
           </h1>
         </div>
@@ -350,7 +350,7 @@ export function Login() {
           {/* ONE ERROR SLOT, DIRECTLY ABOVE THE CONTROLS THAT PRODUCE IT. It used to sit at the top
               of a card because a Google failure originated above the form; with one path left, the
               message belongs next to the thing that failed. */}
-          {error && <p className="text-small text-danger mb-4 text-center">{error}</p>}
+          {error && <p className="text-body1 text-danger mb-4 text-center">{error}</p>}
 
           {step === 'code' ? (
             <CodePanel
@@ -436,9 +436,9 @@ export function Login() {
               </form>
 
               {/* PROJECT TODO: these two need real pages before this is public.
-                  `text-small` ink rather than `muted`: this is prose the reader is being asked to
+                  `text-body1` ink rather than `muted`: this is prose the reader is being asked to
                   agree to, and muted is reserved for metadata. */}
-              <p className="text-small mt-6 text-center">
+              <p className="text-body1 mt-6 text-center">
                 By continuing you agree to our Terms and Privacy Policy.
               </p>
             </>
@@ -543,7 +543,7 @@ function Backdrop() {
   );
 }
 
-// Step 2: enter the mailed code. Deliberately text-h3, not a second masthead: a transactional step
+// Step 2: enter the mailed code. Deliberately text-title3, not a second masthead: a transactional step
 // should not carry the same weight as the claim it replaced.
 //
 // No "Verify" button. The code is a fixed six digits, so the sixth keystroke is unambiguous intent
@@ -574,8 +574,8 @@ function CodePanel({
 }) {
   return (
     <div className="text-center">
-      <p className="text-h3">Check your email</p>
-      <p className="text-body mt-2">
+      <p className="text-title3">Check your email</p>
+      <p className="text-body0 mt-2">
         We sent a 6-digit code to {email}. It expires in 15 minutes.
       </p>
 
@@ -599,13 +599,13 @@ function CodePanel({
         </Button>
       )}
 
-      <div className="text-small mt-6 flex flex-col gap-2">
+      <div className="text-body1 mt-6 flex flex-col gap-2">
         {/* Disabled-with-a-countdown rather than hidden: a missing button reads as "there is no way
             to get another one", which is the moment people give up and leave. */}
         <button
           onClick={onResend}
           disabled={cooldown > 0 || sending || verifying}
-          className="hover:text-accent font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
+          className="link hover:text-accent transition disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
         >
           {cooldown > 0
             ? `Send a new code in ${cooldown}s`
@@ -616,7 +616,7 @@ function CodePanel({
         <button
           onClick={onBack}
           disabled={verifying}
-          className="hover:text-accent font-medium underline underline-offset-2 transition disabled:cursor-not-allowed disabled:opacity-60"
+          className="link hover:text-accent transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           Use a different email
         </button>

@@ -53,15 +53,15 @@ export function VoiceSection() {
     >
       {RULES.map((item) => (
         <Row key={item.rule} label={item.rule}>
-          <p className="text-small text-muted max-w-2xl text-pretty">{item.why}</p>
+          <p className="text-body1 text-muted max-w-2xl text-pretty">{item.why}</p>
           <div className="mt-4 grid max-w-3xl gap-3 sm:grid-cols-2">
             <div className="border-danger rounded-md border p-4">
-              <p className="text-caption text-danger uppercase">Not this</p>
-              <p className="text-body mt-2 text-pretty">{item.wrong}</p>
+              <p className="text-subtitle4 text-danger uppercase">Not this</p>
+              <p className="text-body0 mt-2 text-pretty">{item.wrong}</p>
             </div>
             <div className="border-success rounded-md border p-4">
-              <p className="text-caption text-success uppercase">This</p>
-              <p className="text-body mt-2 text-pretty">{item.right}</p>
+              <p className="text-subtitle4 text-success uppercase">This</p>
+              <p className="text-body0 mt-2 text-pretty">{item.right}</p>
             </div>
           </div>
         </Row>

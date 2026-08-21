@@ -72,12 +72,23 @@ const variantClasses: Record<ButtonVariant, string> = {
  * 32 / 40 / 48 are on the allowed spacing scale. A single-line Input is 48 for the same reason, so
  * size="lg" and a field sit level in the same row without either being tuned to the other.
  *
- * text-small / text-body, NOT Tailwind's stock text-sm / text-base: the stock utilities live
- * outside the @theme scale and drift the moment the scale is retuned. */
+ * THE LABEL ROLE IS A BUTTON ROLE, AND IT CARRIES WEIGHT 900 (2026-08-21). The size classes used
+ * to pair a body role with a separate `font-medium` further down the class list, which is the
+ * exact split the new type scale exists to close: a control's label is not body text that happens
+ * to sit on a control. `text-button1/2/3` carry size, line-height AND weight together, so no call
+ * site and no variant can put a button at the wrong weight.
+ *
+ * 900 is measured, not chosen. onX Hunt's <ys-button> computes to font-weight 900 in their live
+ * app, and it is the single thing that makes their CTAs read as pressable objects rather than as
+ * coloured rectangles with words on them. It is also why `size` maps to a button role rather than
+ * a body one: the height and the label weight now move together by construction.
+ *
+ * NOT Tailwind's stock text-sm / text-base: the stock utilities live outside the @theme scale and
+ * drift the moment the scale is retuned. */
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'h-8 px-4 text-small',
-  md: 'h-10 px-5 text-small',
-  lg: 'h-12 px-8 text-body',
+  sm: 'h-8 px-4 text-button3',
+  md: 'h-10 px-5 text-button2',
+  lg: 'h-12 px-8 text-button1',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -114,7 +125,7 @@ export function Button({
            duration-100, NOT the project default of 200ms, and this is the one place a component
            overrides the curve on purpose. A press has to answer the finger immediately: at 200ms
            the button still reads as mid-change after the finger has already lifted. */
-        'relative inline-flex items-center justify-center rounded-md text-center font-medium transition duration-100 disabled:cursor-not-allowed',
+        'relative inline-flex items-center justify-center rounded-md text-center transition duration-100 disabled:cursor-not-allowed',
         variantClasses[variant],
         sizeClasses[size],
         className

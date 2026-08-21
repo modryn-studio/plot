@@ -12,9 +12,9 @@ export function SpacingSection() {
         <div className="flex flex-col gap-2">
           {SPACING_STEPS.map((step) => (
             <div key={step.step} className="flex items-center gap-4">
-              <code className="text-caption text-muted w-8 shrink-0 tabular-nums">{step.step}</code>
+              <code className="text-subtitle4 text-muted w-8 shrink-0 tabular-nums">{step.step}</code>
               <div className={`bg-accent h-2 rounded-sm ${step.cls}`} />
-              <span className="text-caption text-muted tabular-nums">{step.px}px</span>
+              <span className="text-subtitle4 text-muted tabular-nums">{step.px}px</span>
             </div>
           ))}
         </div>
@@ -22,8 +22,8 @@ export function SpacingSection() {
 
       <Row label="Rhythm" note="8 is the base, 4 only for tight internals">
         <div className="border-border rounded-md border p-6">
-          <p className="text-h3">A card at the default rhythm</p>
-          <p className="text-body text-muted mt-2 text-pretty">
+          <p className="text-title3">A card at the default rhythm</p>
+          <p className="text-body0 text-muted mt-2 text-pretty">
             Label to body is 8. Body to the next block is 24. The card pads at 24. Nothing here
             picks a number, it picks a step.
           </p>

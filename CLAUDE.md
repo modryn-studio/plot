@@ -31,7 +31,7 @@ table. Everything in `src/` is boilerplate plus the rack.
 |---|---|
 | 1 Discovery | passed — `docs/problem-brief.md` |
 | 2 Definition | passed — `docs/spec.md` |
-| 3 Design system | re-locked 2026-08-20 — `docs/design-system.md`, and the reset note below |
+| 3 Design system | re-locked 2026-08-20 (colour, radius) and 2026-08-21 (face, type scale) — `docs/design-system.md`, and the reset note below |
 | 4 Architecture | passed — `docs/architecture.md`; schema written and migration applied to a live Neon project |
 | 5 Build | in progress — `docs/build-plan.md` §1 ground checklist closed 2026-08-20; deployed to **https://plot-steel.vercel.app**; slice 0 (`ground`) not yet started |
 
@@ -49,9 +49,12 @@ So the whole design layer was replaced with `modryn-base`'s current one — `glo
 **Plot was then re-locked on the house system, and that work is DONE** — this paragraph used to say
 re-locking was the next task, and it was already stale by the time anyone read it. `5ef19e3` locked
 warm paper + cyanotype and `cc92710` settled `elevated`. Exactly the four permitted changes were
-made and nothing else: the colour role VALUES, the semantics, `--font-heading` (split two ways, the
-one structural divergence), and the radius scale at 4/8/12. **`docs/design-system.md` is the
-record, and it is locked.**
+made and nothing else: the colour role VALUES, the semantics, the face, and the radius scale at
+4/8/12. **`docs/design-system.md` is the record, and it is locked.**
+
+**The face and the type scale were then re-locked again on 2026-08-21**, against onX Hunt's product
+app read live rather than from screenshots: one face (Roboto, replacing the Source Serif + Inter
+split) and a size-by-role type MATRIX replacing the eight size-named steps.
 
 The eight product-specific components from that pass (`CallOut`, `FactRow`, `QuantityRow`,
 `StepCard`, `PromptBar`, `ToolRail`/`ScaleBar`/`DimensionReadout`, `ViewTabs`, `NarratedProgress`)
@@ -124,6 +127,7 @@ before touching a token, a primitive or the shell.** The ones that bite hardest:
 
 - **A `@theme` shadow value must stay INDIRECT** (`--shadow-card: var(--elevation-card)`). Tailwind resolves a directly-declared `@theme` shadow at build time and bakes it into the utility, so the `.dark` override does nothing and every shadow renders its light value. **This repo shipped that bug on 2026-08-17.**
 - **Scoping `.dark` to a SUBTREE only flips the LITERAL tokens; the DERIVED ones stay baked at their light values** unless `.dark` also restates them. `@theme` emits to `:root`, and a custom property's computed value has its `var()`s already substituted on the element that declares it, so `--color-accent-foreground: var(--color-elevated)` resolves against LIGHT elevated at `:root` and is inherited as that finished colour. `.dark` on `<html>` works only because html IS `:root`. **`/login` shipped this on 2026-08-20**: its primary CTA rendered the light label on the dark accent at **2.34:1**, and `pressed` flashed near-white. Fixed by restating the five derivations inside `.dark` in `globals.css` — those copies must stay character-identical to their `@theme` originals. **`/kitchen-sink` cannot catch this**, because it measures at the document level where the bug does not exist.
+- **THE TYPE TOKENS ARE ROLES, NOT SIZES, and the old names are gone.** There is no `text-body`, `text-small`, `text-caption`, `text-h1/h2/h3` or `text-display` — they were replaced wholesale on 2026-08-21 by `title0-6` / `numeric1-2` / `subtitle1-4` / `body0-2` (+`-medium`/`-bold`) / `button1-3` / `metadata1`. A size and a weight are now two separate choices, so **never pair a type token with `font-medium`/`font-bold`** — pick the role that already carries the weight. Lint catches an invented token name; it cannot catch `text-body0 font-bold`, which is the old habit wearing new clothes. **Button labels are weight 900** via `text-button1/2/3`, which is the ported signature and not a typo. **Changing the type scale means editing `src/lib/cn.ts` in the SAME commit** — it registers the scale as tailwind-merge's `font-size` group, and a role missing from that list is classified as a COLOUR, so `cn('text-accent', 'text-body0')` silently returns `text-body0` and the ink disappears. Verified: the 2026-08-21 rename left the list stale and every colour+size `cn()` pair lost its colour. Nothing catches this - not tsc, not lint, not /kitchen-sink.
 - **A control gets a border OR a drop shadow, never both**, and only `Card`, modals and popovers may cast a drop shadow at all. Every button-class control presses with the `shadow-press` INSET.
 - **Muted is METADATA; ink is PROSE. Two tiers, never three.** `muted on surface` is 4.40:1 here, so muted prose on a card already fails AA. Hierarchy below body drops through size and weight.
 - **Shape follows the control's CONTENT.** Icon-only is a circle; every labelled control shares one radius, fields included.

@@ -122,7 +122,7 @@ export function CodeInput({
                    The rule this comes from: never animate a keyboard-initiated action.
                    (Filed under "You Don't Need Animations" in modryn-hq's ui-ux-sources.md.)
                    tabular-nums so a digit landing in a box never shifts its neighbours. */
-                'flex h-12 min-w-0 max-w-12 flex-1 items-center justify-center rounded-sm border text-h2 tabular-nums',
+                'flex h-12 min-w-0 max-w-12 flex-1 items-center justify-center rounded-sm border text-title2 tabular-nums',
                 disabled && 'opacity-50',
                 invalid
                   ? 'border-danger text-danger'

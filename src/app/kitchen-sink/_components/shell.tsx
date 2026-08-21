@@ -218,7 +218,7 @@ export function SinkShell({ children }: { children: React.ReactNode }) {
               so the two top rows sit in one band across the shell rather than stepping. That
               agreement is the whole reason both are stated rather than derived. */}
           <div className="flex h-16 shrink-0 items-center justify-between pr-3 pl-6">
-            <span className="text-small font-medium">Kitchen sink</span>
+            <span className="text-body1 font-medium">Kitchen sink</span>
             {/* Every breakpoint, not md-only. On mobile the panel is an overlay and this is its
                 explicit dismiss: without it the only ways out are scrim-tap and Escape, both
                 learned gestures, neither visible. On desktop it is the collapse. One button, both
@@ -243,7 +243,7 @@ export function SinkShell({ children }: { children: React.ReactNode }) {
           >
             {GROUPS.map((group) => (
               <div key={group} className="flex flex-col gap-1">
-                <span className="text-caption text-muted px-3 uppercase">{group}</span>
+                <span className="text-subtitle4 text-muted px-3 uppercase">{group}</span>
                 {NAV.filter((entry) => entry.group === group).map((entry) => (
                   <a
                     key={entry.id}
@@ -269,7 +269,7 @@ export function SinkShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       // A rounded RECTANGLE, not a circle: this is a labelled row, a place to go.
                       // The circle is reserved for icon-only controls acting on the shell.
-                      'text-small flex h-10 items-center rounded-sm px-3 transition-colors',
+                      'text-body1 flex h-10 items-center rounded-sm px-3 transition-colors',
                       active === entry.id ? 'bg-selected text-text' : 'text-text hover:bg-selected'
                     )}
                   >

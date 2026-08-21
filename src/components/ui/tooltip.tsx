@@ -221,7 +221,7 @@ export function Tooltip({
             role="tooltip"
             style={coords ?? undefined}
             className={cn(
-              'bg-elevated border-border text-small text-text pointer-events-none fixed z-50',
+              'bg-elevated border-border text-body1 text-text pointer-events-none fixed z-50',
               'rounded-sm border px-3 py-2 whitespace-nowrap',
               // ease-out: a tooltip ENTERS and LEAVES, so it takes the entrance curve rather
               // than the project's `ease` default, which is for a state change in place.
@@ -232,7 +232,7 @@ export function Tooltip({
             )}
           >
             {label}
-            {shortcut && <kbd className="text-caption text-muted ml-3 font-sans">{shortcut}</kbd>}
+            {shortcut && <kbd className="text-subtitle4 text-muted ml-3 font-sans">{shortcut}</kbd>}
           </div>,
           document.body
         )}

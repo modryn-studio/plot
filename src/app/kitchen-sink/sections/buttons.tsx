@@ -23,7 +23,7 @@ export function ButtonsSection() {
         <div className="flex flex-col gap-4">
           {VARIANTS.map((variant) => (
             <div key={variant} className="flex flex-wrap items-center gap-4">
-              <code className="text-caption text-muted w-20 shrink-0">{variant}</code>
+              <code className="text-subtitle4 text-muted w-20 shrink-0">{variant}</code>
               {SIZES.map((size) => (
                 <Button key={size} variant={variant} size={size}>
                   Continue

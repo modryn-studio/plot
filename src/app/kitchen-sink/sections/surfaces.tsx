@@ -10,11 +10,11 @@ export function SurfacesSection() {
     >
       <Row label="Elevation" note="bg, then surface on it, then elevated on that">
         <div className="bg-bg border-border rounded-md border p-6">
-          <p className="text-caption text-muted">bg</p>
+          <p className="text-subtitle4 text-muted">bg</p>
           <div className="bg-surface border-border mt-3 rounded-md border p-6">
-            <p className="text-caption text-muted">surface</p>
+            <p className="text-subtitle4 text-muted">surface</p>
             <div className="bg-elevated border-border mt-3 rounded-md border p-6">
-              <p className="text-caption text-muted">elevated</p>
+              <p className="text-subtitle4 text-muted">elevated</p>
             </div>
           </div>
         </div>
@@ -25,10 +25,10 @@ export function SurfacesSection() {
           {RADIUS_STEPS.map((step) => (
             <div key={step.name}>
               <div className={`bg-surface border-border h-20 w-20 border ${step.cls}`} />
-              <p className="text-caption mt-2">
+              <p className="text-subtitle4 mt-2">
                 <code>{step.cls}</code>
               </p>
-              <p className="text-caption text-muted max-w-24 text-pretty">{step.use}</p>
+              <p className="text-subtitle4 text-muted max-w-24 text-pretty">{step.use}</p>
             </div>
           ))}
         </div>
@@ -37,12 +37,12 @@ export function SurfacesSection() {
       <Row label="Elevation" note="two values, and the split is drop vs inset">
         <div className="flex flex-wrap gap-6">
           <div className="bg-elevated shadow-card rounded-md p-6">
-            <code className="text-caption">shadow-card</code>
-            <p className="text-caption text-muted mt-1">a sheet above the page</p>
+            <code className="text-subtitle4">shadow-card</code>
+            <p className="text-subtitle4 text-muted mt-1">a sheet above the page</p>
           </div>
           <div className="bg-surface shadow-press rounded-md p-6">
-            <code className="text-caption">shadow-press</code>
-            <p className="text-caption text-muted mt-1">a control pushed into the page</p>
+            <code className="text-subtitle4">shadow-press</code>
+            <p className="text-subtitle4 text-muted mt-1">a control pushed into the page</p>
           </div>
         </div>
         <Note>
@@ -68,13 +68,13 @@ export function SurfacesSection() {
               than bounding a control, which is a quieter job and gets a quieter weight. The outer
               edge above stays border-border because it bounds the whole group. */}
           <div className="border-rule border-b p-4">
-            <p className="text-body">A row</p>
+            <p className="text-body0">A row</p>
           </div>
           <div className="border-rule border-b p-4">
-            <p className="text-body">Another row</p>
+            <p className="text-body0">Another row</p>
           </div>
           <div className="p-4">
-            <p className="text-body">The last row carries no divider</p>
+            <p className="text-body0">The last row carries no divider</p>
           </div>
         </div>
       </Row>

@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
            height only happens to agree with the button beside it, and on /login it did not, 46
            against 56. 48 is on the allowed spacing scale and matches Button size="lg" exactly.
 
-           text-body IS A HARD FLOOR, NOT A PREFERENCE. Below 16px, iOS Safari zooms the viewport
+           text-body0 IS A HARD FLOOR, NOT A PREFERENCE. Below 16px, iOS Safari zooms the viewport
            when a text field takes focus, and it does not zoom back out. This field was 14px, so
            every project built from this boilerplate shipped that. Two unrelated Modryn projects
            found the same threshold independently before it was ever written down here.
@@ -39,7 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
            non-text indicator: re-check on /kitchen-sink if the accent is recoloured, because this
            is the only focus affordance the control has.
            aria-invalid comes last so an invalid field reads as invalid even while focused. */
-        'border-border bg-elevated placeholder:text-muted focus:border-accent aria-invalid:border-danger h-12 w-full rounded-md border px-4 text-body transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'border-border bg-elevated placeholder:text-muted focus:border-accent aria-invalid:border-danger h-12 w-full rounded-md border px-4 text-body0 transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}

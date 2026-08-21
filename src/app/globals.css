@@ -28,7 +28,7 @@
    │ Full reasoning per rule: modryn-hq@v4:playbooks/design-rules.md                        │
    └────────────────────────────────────────────────────────────────────────────────────────┘
    Tailwind v4: tokens live in @theme (NOT :root) so utilities like bg-surface,
-   text-muted, text-h1, rounded-md are generated. Never add a tailwind.config file.
+   text-muted, text-title1, rounded-md are generated. Never add a tailwind.config file.
    Color roles are plain (non-inline) @theme values — that's what makes them real,
    overridable custom properties so .dark below can swap them at runtime. */
 @theme {
@@ -72,35 +72,157 @@
   --color-warning: #a85a09;
   --color-danger: #b3271f;
 
-  /* Type scale — use text-h1, text-body, etc. NEVER hand-pick text-3xl/text-sm per component. */
-  --text-display: 3rem;
-  --text-display--line-height: 3.25rem;
-  --text-display--font-weight: 700;
-  --text-display--letter-spacing: -0.02em;
-  --text-h1: 2.25rem;
-  --text-h1--line-height: 2.5rem;
-  --text-h1--font-weight: 700;
-  --text-h1--letter-spacing: -0.02em;
-  --text-h2: 1.75rem;
-  --text-h2--line-height: 2rem;
-  --text-h2--font-weight: 600;
-  --text-h2--letter-spacing: -0.01em;
-  --text-h3: 1.375rem;
-  --text-h3--line-height: 1.75rem;
-  --text-h3--font-weight: 600;
-  --text-body-lg: 1.125rem;
-  --text-body-lg--line-height: 1.75rem;
-  --text-body-lg--font-weight: 400;
-  --text-body: 1rem;
-  --text-body--line-height: 1.5rem;
-  --text-body--font-weight: 400;
-  --text-small: 0.875rem;
-  --text-small--line-height: 1.25rem;
-  --text-small--font-weight: 400;
-  --text-caption: 0.75rem;
-  --text-caption--line-height: 1rem;
-  --text-caption--font-weight: 500;
-  --text-caption--letter-spacing: 0.01em;
+  /* THE TYPE SCALE - SIZE AND ROLE ARE SEPARATE AXES, ported from onX Hunt's product app
+     (webmap.onxmaps.com) on 2026-08-21, read off their live `--ys-text-*` tokens rather than
+     eyeballed from a screenshot.
+
+     WHAT REPLACED WHAT. This used to be eight size-named steps (display / h1 / h2 / h3 / body-lg /
+     body / small / caption) with ONE weight baked into each, so `text-body` could only ever be 400
+     and a call site wanting 16px at 500 had to bolt `font-medium` on beside it - which is exactly
+     what four call sites had done. The new shape is a MATRIX: a size step, then a role that picks
+     the weight. At 16px there are now six roles (title5, subtitle2, body0, body0-medium,
+     body0-bold, button1) where there was one. That is the whole idea, and it is why their system
+     holds together across a dense map UI.
+
+     IT ALSO SATISFIES A HOUSE RULE RATHER THAN FIGHTING ONE: "hierarchy below body drops through
+     SIZE and WEIGHT, never a third ink." A matrix is that rule expressed as tokens.
+
+     LINE HEIGHTS ARE ALL MULTIPLES OF 4, which plot's old scale already happened to be. Kept
+     deliberately: it is what lets type sit on the same rhythm as the spacing scale.
+
+     LETTER-SPACING IS ZERO ALMOST EVERYWHERE, which is a real change. The old scale tracked
+     display and h1 at -0.02em and caption at +0.01em. onX tracks nothing except the numeric role
+     and the two subtitles that set 500 at small sizes. Optical tracking on a heading is a habit
+     carried over from print; at these sizes on a screen it mostly just makes the token harder to
+     reason about.
+
+     WHAT TAILWIND CANNOT CARRY, and therefore what is NOT here. The `--text-*` namespace supports
+     exactly three sub-properties: --line-height, --letter-spacing and --font-weight. onX's roles
+     also carry `textDecoration` (their link roles underline in the token itself) and
+     `paragraphSpacing` (body0/1/2 declare 20/14/12px of gap between paragraphs). Neither is
+     expressible here. Rather than ship link tokens byte-identical to the body tokens that then
+     silently DO NOT underline - a token that lies is worse than no token - the underline lives in
+     a `.link` utility at the bottom of this file. Paragraph spacing waits for a surface with real
+     long-form prose on it. Their italic roles are dropped for the same reason: nothing sets italic
+     yet, and a token with no consumer is the abstraction this project's conventions forbid. */
+
+  /* Titles - the heading ramp. Always 700, no exceptions, which is why the weight is not in the
+     name. title0 is 48 rather than onX's 57: theirs is a marketing hero size, and the largest real
+     heading in this product is a login claim. */
+  --text-title0: 3rem;
+  --text-title0--line-height: 3.25rem;
+  --text-title0--font-weight: 700;
+  --text-title1: 2.25rem;
+  --text-title1--line-height: 2.75rem;
+  --text-title1--font-weight: 700;
+  --text-title2: 2rem;
+  --text-title2--line-height: 2.5rem;
+  --text-title2--font-weight: 700;
+  --text-title3: 1.5rem;
+  --text-title3--line-height: 2rem;
+  --text-title3--font-weight: 700;
+  --text-title4: 1.125rem;
+  --text-title4--line-height: 1.5rem;
+  --text-title4--font-weight: 700;
+  --text-title5: 1rem;
+  --text-title5--line-height: 1.5rem;
+  --text-title5--font-weight: 700;
+  --text-title6: 0.875rem;
+  --text-title6--line-height: 1.25rem;
+  --text-title6--font-weight: 700;
+
+  /* Numeric - a readout is not prose and should not be set like it. Heavy, tight, and always
+     paired with `tabular-nums` at the call site so digits do not reflow as a value changes.
+     THIS IS THE ROLE PLOT WILL LEAN ON HARDEST: the takeoff is a table of quantities and the plan
+     view is a set of dimensions, which is a denser numeric surface than onX's map chrome.
+     numeric2 is plot's addition; onX ships only the large one. It has a consumer today (the admin
+     stat rows). numeric1 does not yet - it is the takeoff hero readout, and it is the one token
+     here written ahead of its screen, mirroring onX's numeric1 exactly. */
+  --text-numeric1: 3.5rem;
+  --text-numeric1--line-height: 3.75rem;
+  --text-numeric1--font-weight: 900;
+  --text-numeric1--letter-spacing: -0.0625rem;
+  --text-numeric2: 1.375rem;
+  --text-numeric2--line-height: 1.75rem;
+  --text-numeric2--font-weight: 700;
+  --text-numeric2--letter-spacing: -0.0125rem;
+
+  /* Subtitles - the middle ramp, 400 at the top and 500 below it. This is what a label, a section
+     lead or a picked-out row title takes: heavier than body, but not a heading. */
+  --text-subtitle1: 1.375rem;
+  --text-subtitle1--line-height: 1.75rem;
+  --text-subtitle1--font-weight: 400;
+  --text-subtitle2: 1rem;
+  --text-subtitle2--line-height: 1.25rem;
+  --text-subtitle2--font-weight: 500;
+  --text-subtitle2--letter-spacing: -0.0125rem;
+  --text-subtitle3: 0.875rem;
+  --text-subtitle3--line-height: 1.25rem;
+  --text-subtitle3--font-weight: 500;
+  --text-subtitle4: 0.75rem;
+  --text-subtitle4--line-height: 1rem;
+  --text-subtitle4--font-weight: 500;
+  --text-subtitle4--letter-spacing: -0.0125rem;
+
+  /* Body - prose, at three sizes, each with its own medium and bold. body0 is the default for
+     anything that is not a heading, a control or metadata. */
+  --text-body0: 1rem;
+  --text-body0--line-height: 1.5rem;
+  --text-body0--font-weight: 400;
+  --text-body0-medium: 1rem;
+  --text-body0-medium--line-height: 1.5rem;
+  --text-body0-medium--font-weight: 500;
+  --text-body0-bold: 1rem;
+  --text-body0-bold--line-height: 1.5rem;
+  --text-body0-bold--font-weight: 700;
+  --text-body1: 0.875rem;
+  --text-body1--line-height: 1.25rem;
+  --text-body1--font-weight: 400;
+  --text-body1-medium: 0.875rem;
+  --text-body1-medium--line-height: 1.25rem;
+  --text-body1-medium--font-weight: 500;
+  --text-body1-bold: 0.875rem;
+  --text-body1-bold--line-height: 1.25rem;
+  --text-body1-bold--font-weight: 700;
+  --text-body2: 0.75rem;
+  --text-body2--line-height: 1rem;
+  --text-body2--font-weight: 400;
+  --text-body2-bold: 0.75rem;
+  --text-body2-bold--line-height: 1rem;
+  --text-body2-bold--font-weight: 700;
+
+  /* Buttons - 900, and this is THE signature of the reference. Verified live rather than inferred:
+     onX's <ys-button> computes to font-weight 900, not 700. A Black label on a 48px control is
+     what makes their CTAs read as pressable objects rather than as coloured rectangles with words
+     on them, and it is the single most visible thing ported here.
+     Three sizes, one per Button size, so a control's height and its label move together and no
+     call site ever picks a weight. */
+  --text-button1: 1rem;
+  --text-button1--line-height: 1.5rem;
+  --text-button1--font-weight: 900;
+  --text-button2: 0.875rem;
+  --text-button2--line-height: 1.25rem;
+  --text-button2--font-weight: 900;
+  --text-button3: 0.75rem;
+  --text-button3--line-height: 1rem;
+  --text-button3--font-weight: 900;
+
+  /* Metadata - 11px, below every other tier, and new to this system. The old scale bottomed out at
+     12px `caption`. A map or plan surface has chrome that genuinely needs to sit under the content
+     without competing (a scale bar, a layer label, a coordinate), and forcing that to 12 either
+     crowds the canvas or pushes the label off it.
+     ELEVEN IS A FLOOR, NOT AN INVITATION. It is for a word that labels something already visible,
+     never for a sentence, and never for anything on the critical path - spec 1b puts half this
+     product in direct sunlight at arm's length. */
+  --text-metadata1: 0.6875rem;
+  --text-metadata1--line-height: 1rem;
+  --text-metadata1--font-weight: 400;
+  --text-metadata1-medium: 0.6875rem;
+  --text-metadata1-medium--line-height: 1rem;
+  --text-metadata1-medium--font-weight: 500;
+  --text-metadata1-bold: 0.6875rem;
+  --text-metadata1-bold--line-height: 1rem;
+  --text-metadata1-bold--font-weight: 700;
 
   /* Hover and press derivatives. DERIVED, never hand-picked, so recolouring the accent carries
      them with it: a boilerplate whose accent ships as a TODO cannot afford three more hexes that
@@ -269,13 +391,22 @@
   --default-transition-duration: 200ms;
   --default-transition-timing-function: ease;
 
-  /* TWO FACES, and the serif is the argument. This product's document half is a field guide
-     (Peterson / Sibley / Merlin), and a field guide is a serif document; every AI SaaS is not.
-     Headings take the serif. BODY TAKES THE SANS deliberately rather than following the
-     boilerplate's single face: the reading happens outdoors, on a phone, in sunlight, at 14px,
-     which is where a text serif gives up legibility it does not owe. Wired in layout.tsx. */
-  --font-heading: var(--font-source-serif), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  /* ONE FACE, CARRYING EVERYTHING THROUGH WEIGHT (2026-08-21). This was Source Serif 4 for
+     headings over Inter for the interface, and the argument for the split was that plot's document
+     half is a field guide and a field guide is a serif document. The type scale above replaced
+     that argument: hierarchy now comes from a size-by-role matrix with four weights in it, and a
+     second FAMILY on top of that is a third axis competing with the two already doing the work.
+     Roboto because it is what onX Hunt's product app actually ships, measured off their live
+     tokens. Their marketing face is Atlas Grotesk, which is a paid Commercial Type licence and is
+     therefore not an option; Roboto is the one they use where the real work happens anyway.
+     The stack mirrors theirs exactly, Arial before the generic. Wired in layout.tsx.
+
+     --font-heading IS AN ALIAS NOW, not a second face. The house token contract keeps the name (a
+     project is allowed to change what it points at) and /kitchen-sink reads it to report the
+     display face, so deleting it would break both. Pointing it at the same stack is the honest
+     statement that this project has one face. */
+  --font-sans: var(--font-roboto), Arial, sans-serif;
+  --font-heading: var(--font-sans);
 }
 
 /* A SECOND, SOFTER BORDER WEIGHT: THE LINE BETWEEN TWO ROWS, as opposed to the edge that finds a
@@ -412,16 +543,6 @@
 @layer base {
   html {
     @apply bg-bg text-text;
-  }
-
-  /* THE SERIF IS FOR HEADINGS ONLY. The body face is the sans (set on <body> in layout.tsx), so
-     this is the one place the display face is assigned and no component ever names a font. Added
-     by this project, not the boilerplate, which ships a single face — see the note on
-     --font-heading above for why the split is earned here. */
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-heading);
   }
 
   /* SKINNY SCROLLBARS EVERYWHERE, BY DEFAULT. The standards-track properties, so no
@@ -639,4 +760,28 @@
   content: '';
   position: absolute;
   inset: -2px;
+}
+
+/* THE LINK ROLE, AS A UTILITY RATHER THAN A TOKEN, and the reason is a platform limit rather than
+   a preference. onX carries `textDecoration: underline` INSIDE their link type roles, so a call
+   site writes one role name and gets the metrics and the underline together. Tailwind's `--text-*`
+   namespace resolves exactly three sub-properties (--line-height, --letter-spacing,
+   --font-weight); text-decoration is not one of them.
+
+   So `text-link1` as a token would be byte-identical to `text-body1` and would silently NOT
+   underline, which is worse than not having it: a token that lies costs more than a missing one.
+   The metrics come from the body role, the decoration comes from here, and the two compose:
+   `class="text-body1 link"`.
+
+   `currentColor` rather than the accent, deliberately. A link inside a sentence is the same ink as
+   the sentence and is marked by the underline; colouring it as well is two signals for one job,
+   and on the login screen's photographic ground an accent-coloured link would be the only saturated
+   thing in the slab. Call sites that want the accent still say so.
+   `from-font` so the rule sits where the typeface's designer put it, at every weight in the
+   matrix - a fixed offset that looks right at 900 is too tight at 400. */
+.link {
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: from-font;
 }

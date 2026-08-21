@@ -20,8 +20,8 @@ export function EmptyState({
   return (
     <div className="border-border flex flex-col items-center rounded-md border border-dashed px-6 py-12 text-center">
       <Icon size={24} aria-hidden className="text-muted" />
-      <p className="text-h3 mt-4 text-balance">{title}</p>
-      {description && <p className="text-body text-muted mt-2 max-w-sm text-pretty">{description}</p>}
+      <p className="text-title3 mt-4 text-balance">{title}</p>
+      {description && <p className="text-body0 text-muted mt-2 max-w-sm text-pretty">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>
   );

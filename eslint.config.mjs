@@ -49,6 +49,9 @@ export default [
             'menu-panel',
             'panel-transition',
             'skeleton',
+            // The link ROLE. Tailwind's --text-* namespace cannot carry text-decoration, so the
+            // underline could not live in the type token beside the metrics. See globals.css.
+            'link',
             // Structural, not visual: these carry no design decision.
             'sr-only',
             'group',

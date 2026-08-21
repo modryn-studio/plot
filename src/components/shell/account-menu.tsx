@@ -31,7 +31,7 @@ export type AccountUser = {
 };
 
 const ITEM =
-  'text-small text-text hover:bg-selected flex min-h-10 w-full items-center gap-3 rounded-sm px-3 text-left transition-colors';
+  'text-body1 text-text hover:bg-selected flex min-h-10 w-full items-center gap-3 rounded-sm px-3 text-left transition-colors';
 
 export function AccountMenu({ user }: { user?: AccountUser | null }) {
   const { theme, toggleTheme } = useTheme();
@@ -170,7 +170,7 @@ export function AccountMenu({ user }: { user?: AccountUser | null }) {
             without giving it a second, competing fill. */}
         {/* 28px, DOWN FROM 32 (2026-08-20). A 32px disc in a 40px row leaves 4px above and below
             and reads as wedged in; 28 leaves 6. */}
-        <span className="bg-selected border-border text-caption text-muted flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border">
+        <span className="bg-selected border-border text-subtitle4 text-muted flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element -- see above
             <img
@@ -184,7 +184,7 @@ export function AccountMenu({ user }: { user?: AccountUser | null }) {
             (label[0] ?? '?').toUpperCase()
           )}
         </span>
-        <span className="text-small min-w-0 flex-1 truncate text-left">{label}</span>
+        <span className="text-body1 min-w-0 flex-1 truncate text-left">{label}</span>
         {/* Points UP while the menu is up: the panel opens above this row, so the chevron aims at
             the thing it opened rather than at a fixed direction. */}
         <ChevronDown

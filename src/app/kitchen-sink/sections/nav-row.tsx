@@ -21,8 +21,8 @@ export function NavRowSection() {
                 aria-current={i === 1 ? 'true' : undefined}
                 className={
                   i === 1
-                    ? 'text-small bg-selected text-text flex h-10 items-center rounded-sm px-3'
-                    : 'text-small text-text hover:bg-selected flex h-10 items-center rounded-sm px-3 transition-colors'
+                    ? 'text-body1 bg-selected text-text flex h-10 items-center rounded-sm px-3'
+                    : 'text-body1 text-text hover:bg-selected flex h-10 items-center rounded-sm px-3 transition-colors'
                 }
               >
                 {label}
@@ -42,11 +42,11 @@ export function NavRowSection() {
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-2">
             <span className="border-border h-8 w-8 rounded-sm border" />
-            <code className="text-caption text-muted">rest (page)</code>
+            <code className="text-subtitle4 text-muted">rest (page)</code>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-selected border-border h-8 w-8 rounded-sm border" />
-            <code className="text-caption text-muted">hover and active</code>
+            <code className="text-subtitle4 text-muted">hover and active</code>
           </div>
         </div>
         <Note>

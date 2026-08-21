@@ -19,9 +19,9 @@ export function Section({
        The 8 is breathing room, not clearance for a sticky bar. There is no sticky bar any more:
        navigation moved to the sidebar. */
     <section id={id} className="border-border scroll-mt-8 border-t pt-12 pb-4">
-      <h2 className="text-h2">{title}</h2>
+      <h2 className="text-title2">{title}</h2>
       {/* Full ink, not muted: this is prose meant to be READ. Muted is for metadata. */}
-      {intro && <p className="text-body mt-2 max-w-2xl text-pretty">{intro}</p>}
+      {intro && <p className="text-body0 mt-2 max-w-2xl text-pretty">{intro}</p>}
       <div className="mt-8 flex flex-col gap-12">{children}</div>
     </section>
   );
@@ -41,8 +41,8 @@ export function Row({
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         {/* Metadata: a caption naming the specimen below, not something you read for meaning. */}
-        <h3 className="text-caption text-muted uppercase">{label}</h3>
-        {note && <p className="text-small text-muted">{note}</p>}
+        <h3 className="text-subtitle4 text-muted uppercase">{label}</h3>
+        {note && <p className="text-body1 text-muted">{note}</p>}
       </div>
       <div className="mt-4">{children}</div>
     </div>
@@ -54,7 +54,7 @@ export function Row({
 export function Note({ tone = 'muted', children }: { tone?: 'muted' | 'danger'; children: React.ReactNode }) {
   return (
     // A finding is prose, so it takes full ink. Only the label above it is metadata.
-    <p className={tone === 'danger' ? 'text-small text-danger' : 'text-small'}>{children}</p>
+    <p className={tone === 'danger' ? 'text-body1 text-danger' : 'text-body1'}>{children}</p>
   );
 }
 
@@ -65,8 +65,8 @@ export function Verdict({ pass, children }: { pass: boolean; children: React.Rea
     <span
       className={
         pass
-          ? 'text-success text-caption border-success inline-flex rounded-sm border px-2 py-1'
-          : 'text-danger text-caption border-danger inline-flex rounded-sm border px-2 py-1'
+          ? 'text-success text-subtitle4 border-success inline-flex rounded-sm border px-2 py-1'
+          : 'text-danger text-subtitle4 border-danger inline-flex rounded-sm border px-2 py-1'
       }
     >
       {children}

@@ -11,7 +11,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     <textarea
       ref={ref}
       className={cn(
-        /* text-body for the same iOS-zoom reason as Input. No stated height here: that rule is for
+        /* text-body0 for the same iOS-zoom reason as Input. No stated height here: that rule is for
            SINGLE-LINE controls which have to sit level with a button. A textarea is sized by rows,
            so padding plus line-height is the correct mechanism; what must not vary is the
            horizontal padding, which matches Input so the two align in a stacked form. */
@@ -22,7 +22,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
          the rack, which is the only way this is ever found - alone on a white card it looked fine.
          `elevated` is the same ground Input, Card and the secondary Button already take, so a
          stacked form now agrees with itself. */
-        'border-border bg-elevated placeholder:text-muted focus:border-accent aria-invalid:border-danger w-full resize-none rounded-md border px-4 py-3 text-body transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'border-border bg-elevated placeholder:text-muted focus:border-accent aria-invalid:border-danger w-full resize-none rounded-md border px-4 py-3 text-body0 transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}

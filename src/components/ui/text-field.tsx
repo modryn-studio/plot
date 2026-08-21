@@ -43,13 +43,13 @@ export function TextField({
 
   return (
     <div className={className}>
-      <label htmlFor={fieldId} className={labelHidden ? 'sr-only' : 'text-small block font-medium'}>
+      <label htmlFor={fieldId} className={labelHidden ? 'sr-only' : 'text-subtitle3 block'}>
         {label}
       </label>
 
       {/* The hint is guidance, so it takes ink rather than muted. Muted is for metadata. */}
       {hint && (
-        <p id={hintId} className={cn('text-caption', labelHidden ? '' : 'mt-1')}>
+        <p id={hintId} className={cn('text-subtitle4', labelHidden ? '' : 'mt-1')}>
           {hint}
         </p>
       )}

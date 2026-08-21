@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Source_Serif_4 } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/config/site';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -12,21 +12,28 @@ import './globals.css';
  * a serif document. Every AI SaaS is not, which makes this the cheapest differentiator available
  * and one that serves the standard rather than decorating it.
  *
- * BODY TAKES THE SANS, deliberately diverging from the boilerplate's single face. The reading here
- * happens outdoors, on a phone, in sunlight, at 14px — where a text serif gives up legibility it
- * does not owe. Headings get the serif; the interface gets Inter.
+ * ONE FACE, CARRYING EVERYTHING THROUGH WEIGHT. This replaced an Inter + Source Serif 4 pair on
+ * 2026-08-21, and the pair was not wrong so much as answering a different question: it argued that
+ * the document half of this product is a field guide and a field guide is a serif document. What
+ * changed is the reference. onX Hunt's product app runs one grotesque across a 32-role scale and
+ * gets ALL of its hierarchy from size and weight, which is also what the house rule already says
+ * ("hierarchy below body drops through SIZE and WEIGHT, never a third ink"). A second face is a
+ * third axis competing with the two that already work.
  *
- * Both load as CSS variables consumed by --font-heading / --font-sans in globals.css, so no
+ * ROBOTO SPECIFICALLY, because it is what onX ships and it is free where their marketing face is
+ * not (that is Atlas Grotesk, Commercial Type, a paid licence we did not buy). Measured off their
+ * live app rather than guessed.
+ *
+ * THE VARIABLE CUT, NOT A WEIGHT LIST. The scale uses 400 / 500 / 700 / 900, and 900 is
+ * load-bearing rather than decorative: every button label in this system is Black, which is the
+ * single thing that makes the reference read the way it does. Naming four static weights would
+ * ship four files; the variable font is one, and the wght axis covers 100-900.
+ *
+ * Loaded as a CSS variable consumed by --font-sans / --font-heading in globals.css, so no
  * component ever names a font. */
-const sourceSerif = Source_Serif_4({
+const roboto = Roboto({
   subsets: ['latin'],
-  variable: '--font-source-serif',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-roboto',
   display: 'swap',
 });
 
@@ -51,13 +58,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: ThemeProvider's blocking script sets the .dark class
     // before hydration, which intentionally differs from the server-rendered markup.
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${sourceSerif.variable} ${inter.variable}`}
-    >
-      {/* `font-sans`, not the boilerplate's `font-heading`: the interface is the sans and the
-          serif is reserved for headings, which globals.css assigns in @layer base. */}
+    <html lang="en" suppressHydrationWarning className={roboto.variable}>
+      {/* `font-sans` is the whole face now. There is no second family to reserve for headings, so
+          @layer base no longer assigns one and --font-heading is an alias kept for the house
+          token contract. See the note on the font import above. */}
       <body className="font-sans antialiased">
         {/* IconProvider wraps everything so size and stroke are the DEFAULT for every lucide icon
             in the app, including ones written in Server Components. See ui/icon.tsx. */}

@@ -2,7 +2,7 @@
 
 /* THE CHECK THIS WHOLE PAGE WAS WORTH BUILDING FOR.
  *
- * `text-body-lg` once shipped on a landing page as a token that did not exist. It compiled to
+ * `text-subtitle1` once shipped on a landing page as a token that did not exist. It compiled to
  * nothing, the line silently inherited 16px, and nobody noticed for days. The lint rule catches
  * that case now, and only that case. It cannot catch a token that exists and renders at the wrong
  * size, a scale step edited in @theme but not picked up, or a --font-heading pointing at a face
@@ -71,6 +71,9 @@ export function TypeMetrics() {
 
   // A face that never loaded is the most common reason a locked design system still looks
   // unstyled, and it looks entirely normal on screen if you are not comparing it to anything.
+  // Still worth checking with ONE face: if Roboto fails to load, every weight in the matrix falls
+  // back to Arial and the 400/500/700/900 ladder that carries all the hierarchy collapses to
+  // whatever the fallback happens to have.
   const usingDefaultFace = family === 'system-ui';
 
   const rows = TYPE_STEPS.map((step, i) => {
@@ -87,12 +90,20 @@ export function TypeMetrics() {
     <>
       <Row label="Type scale" note="declared token vs what the browser actually rendered">
         <div ref={host} className="flex flex-col gap-8">
-          {rows.map(({ step, metric, missing, mismatch }) => (
+          {rows.map(({ step, metric, missing, mismatch }, i) => (
             <div key={step.name}>
+              {/* A band header whenever the role changes. The bands ARE the documentation here:
+                  this scale's whole claim is that size and role are separate choices, and an
+                  undifferentiated list of 27 rows hides exactly that. */}
+              {(i === 0 || rows[i - 1].step.group !== step.group) && (
+                <p className="text-subtitle4 text-muted border-rule mt-4 mb-4 border-t pt-4 first:mt-0">
+                  {step.group}
+                </p>
+              )}
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <code className="text-caption text-muted">{step.cls}</code>
+                <code className="text-subtitle4 text-muted">{step.cls}</code>
                 {metric && (
-                  <span className="text-caption text-muted tabular-nums">
+                  <span className="text-subtitle4 text-muted tabular-nums">
                     {metric.renderedPx}px / {metric.lineHeight} / {metric.weight}
                     {metric.tracking === 'normal' ? '' : ` / ${metric.tracking}`}
                   </span>
@@ -112,18 +123,20 @@ export function TypeMetrics() {
         </div>
       </Row>
 
-      <Row label="Display face" note="--font-heading">
+      <Row label="Face" note="--font-heading, which is an alias for --font-sans: this project has one face">
         {family === null ? (
           <Note>Measuring.</Note>
         ) : usingDefaultFace ? (
           <Note tone="danger">
             Still system-ui. The boilerplate ships that as a placeholder with a TODO on it, and
             shipping a framework default as the brand face is what unstyled output looks like.
-            Pick a real display face and point --font-heading at it.
+            Point --font-sans at a real face in layout.tsx.
           </Note>
         ) : (
           <Note>
-            Resolved to {family}. Confirm the glyphs above are actually that face, not a fallback.
+            Resolved to {family}. Confirm the glyphs above are actually that face and not a
+            fallback, and that the weight ladder above genuinely steps: 400, 500, 700 and 900 have
+            to be visibly different or the whole scale is doing nothing.
           </Note>
         )}
       </Row>

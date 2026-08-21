@@ -5,8 +5,9 @@
 > in `modryn-hq@v4:playbooks/design-rules.md` and is shipped in `modryn-base`. **Read that first.**
 > This file records only what is *plot's*, which is a much smaller list than it used to be.
 
-**Status:** locked 2026-08-20 (tokens, face, radius). Components are the boilerplate's.
-**Last amended:** 2026-08-20 — rewritten after the design layer was reset onto the house system.
+**Status:** locked. Colour/radius 2026-08-20; **face and type scale re-locked 2026-08-21** on one
+face (Roboto) and a size-by-role type matrix ported from onX Hunt. Components are the boilerplate's.
+**Last amended:** 2026-08-21 — face and type scale.
 
 ---
 
@@ -136,17 +137,33 @@ Deepened from base's so the light values clear AA on the page — the rack calls
 "the usual miss", and plot's measures 4.79. Green survives here and only here: `success` appears
 on document surfaces with no photograph and no plant symbols, so there is no subject collision.
 
-### Face: two, and the serif is the argument
+### Face: one, and the weight ladder is the argument
 
-`--font-heading: Source Serif 4` · `--font-sans: Inter`
+`--font-sans: Roboto` · `--font-heading` is an alias for it.
 
-A field guide is a serif document and every AI SaaS is not, which makes this the cheapest
-differentiator available and one that serves the standard rather than decorating it.
+**Replaced Source Serif 4 + Inter on 2026-08-21.** The old pair was not arbitrary: it argued that
+plot's document half is a field guide, a field guide is a serif document, and every AI SaaS is not.
+That argument lost to a better one rather than to taste.
 
-**This is the one place plot diverges from the boilerplate's structure rather than its values.**
-The house ships a single face on `<body>`. Plot splits it: headings take the serif, the interface
-takes the sans, because the reading happens outdoors on a phone at 14px, where a text serif gives
-up legibility it does not owe. Assigned once in `@layer base`; no component names a font.
+The type scale below now carries hierarchy through a size-by-role matrix with four weights in it.
+A second FAMILY on top of that is a third axis competing with the two already doing the work, and
+the house rule is explicit that hierarchy below body drops through **size and weight**, never a
+third thing. One face with 400 / 500 / 700 / 900 says everything the split said, in one axis.
+
+**Roboto specifically, because it is measured rather than picked.** It is what onX Hunt's product
+app actually ships, read off their live `--ys-text-*` tokens. Their marketing site runs Atlas
+Grotesk, which is a paid Commercial Type licence and therefore not an option; Roboto is the face
+they use where the real work happens anyway. The stack mirrors theirs, `Arial` before the generic.
+
+Loaded as the **variable cut**, not four static weights: 900 is load-bearing (every button label in
+this system is Black), and one variable file beats four static ones. Verified live on
+`/kitchen-sink` that the wght axis is real, not reported: 400/500/700/900 produce four distinct
+advance widths, and the loaded face reports `weight: "100 900"`.
+
+**What this costs, stated rather than hidden.** Roboto is the most-used face on the web and carries
+none of the serif's editorial character. The bet is that plot's identity lives in the warm paper,
+the cyanotype ink, the 4/8/12 radius and the nadir photography, and that a neutral face under those
+reads as an instrument rather than as a brand. Revisit if the built screens read generic.
 
 ### Radius: 4 / 8 / 12
 
@@ -192,7 +209,8 @@ built to check it, in a section titled *Verified, not asserted*.
 **The lesson is not "extend the sink."** It is that a measuring tool nobody opens is worth exactly
 as much as no tool. Every number above was read off the rendered page.
 
-Type steps render exactly as declared (48/52, 36/40, 28/32, 22/28, 18/28).
+All 27 type roles render exactly as declared, in Roboto, with no missing tokens and no
+declared-vs-rendered mismatch (read off `/kitchen-sink`, 2026-08-21).
 
 ### What the sink structurally cannot measure, found on /login (2026-08-20)
 
@@ -235,6 +253,65 @@ it is held to the body bar for the same reason.
 
 **Any screen that puts type over an image owes this measurement, and the sink will not prompt for
 it.**
+
+### The type scale, ported from onX Hunt (2026-08-21)
+
+Read off their live product app (`webmap.onxmaps.com`) with the chrome-devtools CLI, from their
+`--ys-text-*` custom properties, not inferred from screenshots. Their marketing site is a separate
+and much looser system (browser-default `em` multipliers, `line-height: normal`) and was not the
+model.
+
+**The idea worth taking is that SIZE and ROLE are separate axes.** plot's old scale was eight
+size-named steps with one weight baked into each, so `text-body` could only ever be 400 and four
+call sites had already bolted `font-medium` on beside it. The new scale is a matrix: 8 sizes x 27
+roles. At 16px there are now six roles where there was one.
+
+| band | roles | weight |
+|---|---|---|
+| `title0-6` | 48 / 36 / 32 / 24 / 18 / 16 / 14 | 700 |
+| `numeric1-2` | 56 / 22 | 900 / 700, negative tracking |
+| `subtitle1-4` | 22 / 16 / 14 / 12 | 400 / 500 |
+| `body0-2` + `-medium` / `-bold` | 16 / 14 / 12 | 400 / 500 / 700 |
+| `button1-3` | 16 / 14 / 12 | **900** |
+| `metadata1` + `-medium` / `-bold` | 11 | 400 / 500 / 700 |
+
+**Buttons at 900 is the signature**, and it is measured: onX's `<ys-button>` computes to
+font-weight 900. It is what makes their CTAs read as pressable objects rather than coloured
+rectangles with words on them. `Button`'s `size` now maps to a button role, so a control's height
+and its label weight move together and no call site can pick a weight.
+
+**Every line-height is a multiple of 4**, which plot's old scale already was. Kept deliberately.
+
+**Letter-spacing went to zero almost everywhere** (was -0.02em on display/h1, +0.01em on caption).
+onX tracks nothing except the numeric roles and the two subtitles that set 500 small.
+
+**11px `metadata1` is new** and is a floor, not an invitation: a word labelling something already
+visible, never a sentence, never on the critical path. Spec 1b puts half this product in sunlight.
+
+**Three of their properties could not come across, and the reason is a Tailwind limit.** The
+`--text-*` namespace resolves exactly three sub-properties: `--line-height`, `--letter-spacing`,
+`--font-weight`. onX's roles also carry `textDecoration` (their link roles underline in the token)
+and `paragraphSpacing` (body0/1/2 declare 20/14/12px). A `text-link1` token would have been
+byte-identical to `text-body1` and would have silently NOT underlined, and a token that lies costs
+more than a missing one. The underline is a `.link` utility instead; paragraph spacing waits for a
+long-form surface. Their italic roles were dropped as tokens with no consumer.
+
+### A `<picture>` does not re-select after load, and the scrim is why that is survivable
+
+Chrome runs the source-selection algorithm once. Rotating a phone leaves the previous orientation's
+file in place: measured live, the media query stops matching while `currentSrc` does not change.
+So `/login` can render the landscape backdrop in a portrait viewport and vice versa.
+
+Measured rather than assumed, all four combinations, worst band against ink:
+
+| | phone 375x812 | desktop 1440x900 |
+|---|---|---|
+| correct file | 9.15 | 7.63 |
+| wrong file, after rotation | 7.81 | 8.59 |
+
+All pass AA with margin, so this is a **composition** bug and not a legibility one, and it is
+recorded rather than engineered around. The 65% scrim chosen for contrast is what makes the wrong
+crop safe. Revisit only if a rotated phone ever shows type on a busy region.
 
 ---
 

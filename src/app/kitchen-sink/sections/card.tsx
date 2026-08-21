@@ -10,8 +10,8 @@ export function CardSection() {
     >
       <Row label="On the page" note="bg-elevated + shadow-card, no border">
         <Card className="max-w-sm p-6">
-          <p className="text-h3">A raised object</p>
-          <p className="text-body text-muted mt-2 text-pretty">
+          <p className="text-title3">A raised object</p>
+          <p className="text-body0 text-muted mt-2 text-pretty">
             Elevated is lighter than the page in both modes, so the lift comes from the ground
             changing, not from an outline. Check this in dark mode: it still lifts.
           </p>
@@ -23,13 +23,13 @@ export function CardSection() {
           {/* border-rule, NOT border-border: this line separates two rows, it does not bound a
               control, and rule is a deliberately softer weight. See the token's own comment. */}
           <div className="border-rule border-b p-4">
-            <p className="text-body">A row</p>
+            <p className="text-body0">A row</p>
           </div>
           <div className="border-rule border-b p-4">
-            <p className="text-body">Another row</p>
+            <p className="text-body0">Another row</p>
           </div>
           <div className="p-4">
-            <p className="text-body">The last row carries no divider</p>
+            <p className="text-body0">The last row carries no divider</p>
           </div>
         </Card>
       </Row>

@@ -98,7 +98,7 @@ export function Palette() {
           <Note>Measuring.</Note>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="text-caption text-muted hidden gap-4 sm:grid sm:grid-cols-3">
+            <div className="text-subtitle4 text-muted hidden gap-4 sm:grid sm:grid-cols-3">
               <span>Token</span>
               <span>Light</span>
               <span>Dark</span>
@@ -106,8 +106,8 @@ export function Palette() {
             {roleRows.map((row) => (
               <div key={row.name} className="grid gap-2 sm:grid-cols-3 sm:gap-4">
                 <div>
-                  <code className="text-small">{row.name}</code>
-                  <p className="text-caption text-muted">{row.use}</p>
+                  <code className="text-body1">{row.name}</code>
+                  <p className="text-subtitle4 text-muted">{row.use}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
@@ -117,14 +117,14 @@ export function Palette() {
                     // the other mode's value while the page sits in this one.
                     style={{ backgroundColor: row.light }}
                   />
-                  <code className="text-caption text-muted">{hexOf(row.light)}</code>
+                  <code className="text-subtitle4 text-muted">{hexOf(row.light)}</code>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
                     className="border-border h-10 w-10 shrink-0 rounded-sm border"
                     style={{ backgroundColor: row.dark }}
                   />
-                  <code className="text-caption text-muted">{hexOf(row.dark)}</code>
+                  <code className="text-subtitle4 text-muted">{hexOf(row.dark)}</code>
                 </div>
               </div>
             ))}
@@ -137,7 +137,7 @@ export function Palette() {
           <Note>Measuring.</Note>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="text-caption text-muted hidden gap-4 sm:grid sm:grid-cols-3">
+            <div className="text-subtitle4 text-muted hidden gap-4 sm:grid sm:grid-cols-3">
               <span>Pair</span>
               <span>Light</span>
               <span>Dark</span>
@@ -145,11 +145,11 @@ export function Palette() {
             {pairRows.map((row) => (
               <div key={row.label} className="grid gap-2 sm:grid-cols-3 sm:gap-4">
                 <div>
-                  <code className="text-small">{row.label}</code>
-                  <p className="text-caption text-muted">{row.detail}</p>
+                  <code className="text-body1">{row.label}</code>
+                  <p className="text-subtitle4 text-muted">{row.detail}</p>
                 </div>
                 <span className="flex items-center gap-2">
-                  <span className="text-small tabular-nums">
+                  <span className="text-body1 tabular-nums">
                     {row.light === null ? 'not measured' : row.light.toFixed(2)}
                   </span>
                   {row.light !== null && (
@@ -159,7 +159,7 @@ export function Palette() {
                   )}
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-small tabular-nums">
+                  <span className="text-body1 tabular-nums">
                     {row.dark === null ? 'not measured' : row.dark.toFixed(2)}
                   </span>
                   {row.dark !== null && (

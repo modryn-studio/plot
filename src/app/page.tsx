@@ -7,9 +7,9 @@ import { site } from '@/config/site';
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center px-6 py-16">
-      <h1 className="text-h1 text-balance">{site.name}</h1>
-      <p className="text-body-lg text-muted mt-4 text-pretty">{site.description}</p>
-      <p className="text-small text-muted mt-10">Still being built, and not open for signups yet.</p>
+      <h1 className="text-title1 text-balance">{site.name}</h1>
+      <p className="text-subtitle1 text-muted mt-4 text-pretty">{site.description}</p>
+      <p className="text-body1 text-muted mt-10">Still being built, and not open for signups yet.</p>
     </main>
   );
 }

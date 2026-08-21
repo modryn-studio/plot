@@ -70,19 +70,57 @@ export const CONTRAST_PAIRS: ContrastPair[] = [
   { label: 'field on bg', probe: 'text-field bg-bg', threshold: 3, note: 'the same box on the page rather than on a card' },
 ];
 
-/* The type scale. `sample` is deliberately a real sentence: a step is wrong in a way you can see
- * in prose and cannot see in the word "Aa". */
-export type TypeStep = { name: string; cls: string; sample: string };
+/* THE TYPE SCALE, AS A MATRIX. `sample` is deliberately a real phrase: a step is wrong in a way
+ * you can see in language and cannot see in the word "Aa".
+ *
+ * `name` MUST be the token suffix, not a friendly label. TypeMetrics looks up
+ * `--text-${name}` on :root to compare what the token DECLARES against what the browser
+ * RENDERED, so a display name here would report every row as a missing token.
+ *
+ * `group` bands the rows by role. With 27 roles across 8 sizes, an undifferentiated list is
+ * unreadable, and the bands are the thing being documented: the point of this scale is that a
+ * size and a role are separate choices. */
+export type TypeStep = { name: string; cls: string; sample: string; group: string };
 
 export const TYPE_STEPS: TypeStep[] = [
-  { name: 'display', cls: 'text-display', sample: 'Ship the thing' },
-  { name: 'h1', cls: 'text-h1', sample: 'Ship the thing' },
-  { name: 'h2', cls: 'text-h2', sample: 'What this section covers' },
-  { name: 'h3', cls: 'text-h3', sample: 'A smaller heading, still a heading' },
-  { name: 'body-lg', cls: 'text-body-lg', sample: 'The size a landing page paragraph is set at, one step above body.' },
-  { name: 'body', cls: 'text-body', sample: 'The default. Everything that is not a heading or a caption is set at this size.' },
-  { name: 'small', cls: 'text-small', sample: 'Help text under a field, secondary metadata, timestamps.' },
-  { name: 'caption', cls: 'text-caption', sample: 'Labels, table headers, the smallest thing allowed to carry meaning.' },
+  // Titles - always 700. The weight is not in the name because it never varies.
+  { name: 'title0', cls: 'text-title0', sample: 'Know your property', group: 'Titles' },
+  { name: 'title1', cls: 'text-title1', sample: 'Before you build on it', group: 'Titles' },
+  { name: 'title2', cls: 'text-title2', sample: 'What this section covers', group: 'Titles' },
+  { name: 'title3', cls: 'text-title3', sample: 'A smaller heading, still a heading', group: 'Titles' },
+  { name: 'title4', cls: 'text-title4', sample: 'The heading on a card', group: 'Titles' },
+  { name: 'title5', cls: 'text-title5', sample: 'A heading at body size', group: 'Titles' },
+  { name: 'title6', cls: 'text-title6', sample: 'The smallest heading', group: 'Titles' },
+
+  // Numeric - readouts. Always paired with tabular-nums at the call site.
+  { name: 'numeric1', cls: 'text-numeric1', sample: '1,240 sq ft', group: 'Numeric' },
+  { name: 'numeric2', cls: 'text-numeric2', sample: '14 bags, 2 pallets', group: 'Numeric' },
+
+  // Subtitles - the middle ramp. Heavier than body, not a heading.
+  { name: 'subtitle1', cls: 'text-subtitle1', sample: 'The lead paragraph under a title, one step above body.', group: 'Subtitles' },
+  { name: 'subtitle2', cls: 'text-subtitle2', sample: 'A picked-out row title', group: 'Subtitles' },
+  { name: 'subtitle3', cls: 'text-subtitle3', sample: 'The label above a field', group: 'Subtitles' },
+  { name: 'subtitle4', cls: 'text-subtitle4', sample: 'A table header, or the smallest thing allowed to carry meaning', group: 'Subtitles' },
+
+  // Body - prose, three sizes, each with medium and bold.
+  { name: 'body0', cls: 'text-body0', sample: 'The default. Everything that is not a heading, a control or metadata is set at this size.', group: 'Body' },
+  { name: 'body0-medium', cls: 'text-body0-medium', sample: 'The same size, picked out without becoming a heading.', group: 'Body' },
+  { name: 'body0-bold', cls: 'text-body0-bold', sample: 'The same size again, at full weight.', group: 'Body' },
+  { name: 'body1', cls: 'text-body1', sample: 'Help text under a field, secondary detail, a timestamp.', group: 'Body' },
+  { name: 'body1-medium', cls: 'text-body1-medium', sample: 'Help text, picked out.', group: 'Body' },
+  { name: 'body1-bold', cls: 'text-body1-bold', sample: 'Help text, at full weight.', group: 'Body' },
+  { name: 'body2', cls: 'text-body2', sample: 'The dense tier: a legend, a footnote, a value in a packed table.', group: 'Body' },
+  { name: 'body2-bold', cls: 'text-body2-bold', sample: 'The dense tier, at full weight.', group: 'Body' },
+
+  // Buttons - 900. The signature ported from onX. Never used outside a control's label.
+  { name: 'button1', cls: 'text-button1', sample: 'Continue with email', group: 'Buttons (900)' },
+  { name: 'button2', cls: 'text-button2', sample: 'Save this project', group: 'Buttons (900)' },
+  { name: 'button3', cls: 'text-button3', sample: 'Undo', group: 'Buttons (900)' },
+
+  // Metadata - 11px. A word that labels something already visible, never a sentence.
+  { name: 'metadata1', cls: 'text-metadata1', sample: 'Modelled, not measured', group: 'Metadata (11px)' },
+  { name: 'metadata1-medium', cls: 'text-metadata1-medium', sample: 'Zone 5b', group: 'Metadata (11px)' },
+  { name: 'metadata1-bold', cls: 'text-metadata1-bold', sample: 'North', group: 'Metadata (11px)' },
 ];
 
 export const RADIUS_STEPS = [

@@ -11,7 +11,7 @@ export function FieldError({ id, children }: { id?: string; children?: React.Rea
   if (!children) return null;
 
   return (
-    <p id={id} role="alert" className="text-danger text-small mt-2 flex items-start gap-2">
+    <p id={id} role="alert" className="text-danger text-body1 mt-2 flex items-start gap-2">
       <AlertCircle size={16} aria-hidden className="mt-px shrink-0" />
       <span>{children}</span>
     </p>

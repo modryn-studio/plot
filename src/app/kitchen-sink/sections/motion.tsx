@@ -14,7 +14,7 @@ import { Note, Row, Section } from '../_components/section';
 function Track({ running, ease, label }: { running: boolean; ease: string; label: string }) {
   return (
     <div>
-      <code className="text-caption text-muted">{label}</code>
+      <code className="text-subtitle4 text-muted">{label}</code>
       <div className="bg-surface mt-2 h-3 w-full overflow-hidden rounded-sm">
         <div
           className={cn(
@@ -62,13 +62,13 @@ function Interruptible() {
       <Button onClick={() => setRight((r) => !r)}>Toggle</Button>
       <div className="mt-6 grid max-w-xl gap-6">
         <div>
-          <code className="text-caption text-muted">keyframe animation: snaps on interrupt</code>
+          <code className="text-subtitle4 text-muted">keyframe animation: snaps on interrupt</code>
           <div className="bg-surface mt-2 w-64 rounded-sm p-1">
             <div ref={keyframed} className="bg-danger h-8 w-32 rounded-sm" />
           </div>
         </div>
         <div>
-          <code className="text-caption text-muted">transition: reverses from where it is</code>
+          <code className="text-subtitle4 text-muted">transition: reverses from where it is</code>
           <div className="bg-surface mt-2 w-64 rounded-sm p-1">
             <div
               className={cn(
@@ -140,9 +140,9 @@ export function MotionSection() {
 
       <Row label="Where they are set" note="the curve is the DEFAULT, never a per-component pick">
         <div className="border-border max-w-xl rounded-md border p-4">
-          <p className="text-small">
-            A bare <code className="text-caption">transition-colors</code> already runs 200ms on{' '}
-            <code className="text-caption">ease</code>. Nothing has to ask for it.
+          <p className="text-body1">
+            A bare <code className="text-subtitle4">transition-colors</code> already runs 200ms on{' '}
+            <code className="text-subtitle4">ease</code>. Nothing has to ask for it.
           </p>
         </div>
         <Note>
@@ -177,7 +177,7 @@ export function MotionSection() {
       </Row>
 
       <Row label="Reduced motion" note="scoped to what MOVES, not to everything">
-        <p className="text-body max-w-2xl text-pretty">
+        <p className="text-body0 max-w-2xl text-pretty">
           Colour and opacity transitions survive prefers-reduced-motion. Anything that moves an
           element through space, changes its size, or loops does not. Freezing the colour changes
           too would make the interface feel broken rather than calm, and they are not what the
