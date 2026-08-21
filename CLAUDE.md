@@ -120,6 +120,7 @@ each lives in `modryn-hq@v4:playbooks/scar-tissue.md`.
 - **API routes use `createRouteLogger`**; env vars go in `src/lib/env.ts` (zod, fail-fast).
 - **An emailed code, not a magic link.**
 - **`?next=` is attacker-supplied.** Always read it through `safeNext`; `startsWith('/')` is NOT enough.
+- **A STALE TURBOPACK CACHE CAN DROP AN ENTIRE `@theme` NAMESPACE, SILENTLY.** After the 2026-08-21 type-scale rewrite the dev server served CSS where every `--text-*` token was absent and no `.text-*` utility existed, so all 27 roles rendered at an inherited 16px/400 and `/kitchen-sink` showed "no --text-title1 token" on every row — while `--color-*`, `--font-*`, `--radius-*` and `--shadow-*` from the SAME `@theme` block were fine. **The file was correct**: compiling it through `@tailwindcss/postcss` at the project's own version produced the right output. The tell was `.next/dev/static/chunks/` still holding font chunks for faces deleted hours earlier, and the likely trigger is `next build` writing into the same `.next` a live `next dev` is using. **Fix: stop dev, `rm -rf .next`, restart.** Do not go looking for the bug in `globals.css` first — compile it standalone through postcss and compare before touching a token.
 - **NO `loading.tsx` AT THE APP ROOT.** Past ~50KB of streamed payload its boundary stops hydrating, silently.
 
 **Design system** — the full set lives in `modryn-hq@v4:playbooks/design-rules.md`. **Read it
